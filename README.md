@@ -10,10 +10,11 @@ Screen Interaction Recorder captures clicks, form submissions, and other interac
 
 ## Features
 
-- **Effortless Recording**: Capture user interactions (clicks, form submissions, selections) with minimal setup
+- **Effortless Recording**: Capture user interactions with Shift+Click to precisely control what gets recorded
 - **Automatic Screenshots**: Automatically takes screenshots at each interaction point
 - **Explanatory Tooltips**: Add custom explanations for each interaction
 - **Interactive Dots**: Purple dots indicate interaction points with tooltips
+- **Post-Recording Editing**: Edit tooltip text after recording in a dedicated edit interface
 - **Multiple Export Options**:
   - Export to PowerPoint presentations
   - Export to interactive HTML slideshows
@@ -46,12 +47,14 @@ Screen Interaction Recorder captures clicks, form submissions, and other interac
 2. Enter a title for your recording
 3. Click "Start Recording"
 4. Navigate through the website, performing the interactions you want to record
-5. For each interaction:
-   - The extension will take a screenshot
-   - A popup will appear asking for an explanation (optional)
-   - Enter text describing what the interaction does
-   - Click "Save" or press Ctrl+Enter
+5. To capture an interaction, hold the Shift key while clicking on elements
+   - The extension will take a screenshot for each Shift+Click
+   - Regular clicks without Shift will not be recorded, allowing normal navigation
 6. When finished, click the extension icon again and select "Stop Recording"
+7. The edit page will open automatically, allowing you to:
+   - Review each captured interaction
+   - Add or edit tooltip text for each step
+   - Save your changes or cancel to discard them
 
 ### Viewing and Exporting Recordings
 
@@ -69,12 +72,13 @@ Screen Interaction Recorder captures clicks, form submissions, and other interac
 
 The extension operates in several key components:
 
-1. **Content Script (contentScript.js)**: Injects into web pages to capture user interactions, take screenshots, and display tooltip popups
+1. **Content Script (contentScript.js)**: Injects into web pages to capture Shift+Click interactions and take screenshots
 2. **Background Script (background.js)**: Manages recording state, processes interactions, and handles data storage
 3. **Popup (popup.html/js)**: Provides the user interface for starting/stopping recordings
-4. **Recordings Page (recordings.html/js)**: Lists saved recordings and provides access to the viewer
-5. **Viewer (viewer.html/js)**: Interactive slideshow viewer with navigation controls
-6. **PowerPoint Generator (pptx-generator.html/js)**: Converts recordings to PowerPoint presentations
+4. **Edit Page (edit-recording.html/js)**: Allows reviewing and editing of tooltip text after recording
+5. **Recordings Page (recordings.html/js)**: Lists saved recordings and provides access to the viewer
+6. **Viewer (viewer.html/js)**: Interactive slideshow viewer with navigation controls
+7. **PowerPoint Generator (pptx-generator.html/js)**: Converts recordings to PowerPoint presentations
 
 The extension stores all data locally in your browser using Chrome's storage API. No data is sent to external servers.
 
@@ -101,6 +105,7 @@ Each recording contains:
 - `contentScript.js` - Injected into web pages to capture interactions
 - `background.js` - Background service worker handling core functionality
 - `popup.html/js` - Extension popup interface
+- `edit-recording.html/js` - Post-recording tooltip editing interface
 - `recordings.html/js` - Recording management page
 - `viewer.html/js` - Slideshow viewer
 - `pptx-generator.html/js` - PowerPoint export functionality
@@ -121,7 +126,9 @@ The Screen Interaction Recorder:
 
 - **Recording Not Starting**: Ensure you've granted the extension necessary permissions
 - **Missing Screenshots**: Some secure pages may block screenshot functionality
-- **Tooltip Not Appearing**: For fast-navigating pages, tooltips may appear on the destination page
+- **Interaction Not Recorded**: Make sure you're holding the Shift key while clicking
+- **Tooltip Not Appearing**: For fast-navigating pages, tooltips may be added during the edit phase
+- **Dot Position in Edit View**: The purple dot position in the edit view may differ slightly from the final output, but the final presentation will show correct positioning
 
 ### Support
 
