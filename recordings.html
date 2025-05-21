@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
+  <title>Saved Recordings - Screen Interaction Recorder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Saved Recordings</h1>
+      <button id="back-button" class="back-button">
+        Back to Recorder
+      </button>
+    </div>
+    
+    <div id="loading-state" class="state-message">
+      Loading recordings...
+    </div>
+    
+    <div id="empty-state" class="state-message" style="display: none;">
+      <p>You don't have any saved recordings yet.</p>
+      <p>Click the extension icon to start recording your interactions!</p>
+    </div>
+    
+    <div id="recordings-grid" class="recordings-grid">
+      <!-- Recording cards will be added here dynamically -->
+    </div>
+  </div>
+
+  <!-- Recording card template -->
+  <template id="recording-card-template">
+    <div class="recording-card">
+      <div class="preview">
+        <div class="preview-placeholder">
+          <div class="preview-icon"></div>
+          Click to view slideshow
+        </div>
+        <div class="slide-count"></div>
+      </div>
+      
+      <div class="info">
+        <h2 class="recording-title"></h2>
+        <p class="recording-date"></p>
+        
+        <div class="actions">
+          <button class="action-button export-html">
+            Export HTML
+          </button>
+          <button class="action-button danger delete-recording">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="js/recordings.js"></script>
+</body>
+</html>

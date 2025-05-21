@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
+  <title>Slideshow Viewer - Screen Interaction Recorder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Chat bubble tooltip styles */
+    .tooltip-bubble {
+      position: absolute;
+      left: 30px;
+      top: -12px;
+      background-color: transparent;
+      border-radius: 18px;
+      padding: 3px;
+      filter: drop-shadow(0 1px 8px rgba(0,0,0,0.3));
+      min-width: 180px;
+      max-width: 320px;
+      z-index: 150;
+      pointer-events: auto;
+      transform-origin: left center;
+      animation: tooltipPop 0.3s ease-out;
+      cursor: pointer;
+    }
+
+    @keyframes tooltipPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .tooltip-text {
+      display: inline-block;
+      background-color: #8A2BE2; /* Purple color to match dot */
+      color: white;
+      text-align: left;
+      border-radius: 15px;
+      padding: 12px 16px;
+      width: 100%;
+      font-size: 16px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-family: 'Arial', sans-serif;
+    }
+
+    /* Chat bubble arrow pointing to dot */
+    .tooltip-bubble:before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      left: -12px;
+      border-width: 12px 12px 12px 0;
+      border-style: solid;
+      border-color: transparent #8A2BE2 transparent transparent;
+    }
+
+    /* Right-aligned tooltip for dots near the right edge */
+    .tooltip-bubble.flip-left {
+      left: auto;
+      right: 30px;
+    }
+
+    .tooltip-bubble.flip-left:before {
+      left: auto;
+      right: -12px;
+      transform: scaleX(-1);
+    }
+    
+    /* Pulse animation for the click indicator */
+    @keyframes pulse-click {
+      0% { box-shadow: 0 0 0 0 rgba(138, 43, 226, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(138, 43, 226, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(138, 43, 226, 0); }
+    }
+  </style>
+</head>
+<body class="viewer-body">
+  <div class="viewer-container">
+    <div class="viewer-header">
+      <h1 id="recording-title" class="title">Recording Title</h1>
+      <div class="controls">
+        <button id="export-pptx" class="control-button">
+          Export to PowerPoint
+        </button>
+        <button id="export-html" class="control-button">
+          Export to HTML
+        </button>
+        <button id="back-to-recordings" class="control-button">
+          Back to Recordings
+        </button>
+      </div>
+    </div>
+    
+    <div id="loading-state" class="loading-state">
+      Loading slideshow...
+    </div>
+    
+    <div id="slide-container" class="slide-container" style="display: none;">
+      <div class="slide">
+        <img id="slide-image" src="" alt="Slide">
+        <div id="click-indicator" class="click-indicator"></div>
+        <div id="slide-number" class="slide-number">1 / 10</div>
+      </div>
+    </div>
+    
+    <div id="navigation" class="navigation" style="display: none;">
+      <button id="prev-button" class="nav-button">←</button>
+      <button id="next-button" class="nav-button">→</button>
+    </div>
+  </div>
+
+  <script src="js/viewer.js"></script>
+</body>
+</html>

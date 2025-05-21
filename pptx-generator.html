@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
+  <title>PowerPoint Generator - Screen Interaction Recorder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="generator-body">
+  <div class="container">
+    <div class="generator-card">
+      <div class="header">
+        <h1 id="generator-title" class="title">PowerPoint Generator</h1>
+        <p id="recording-subtitle" class="subtitle">Recording Name</p>
+      </div>
+      
+      <p id="status-text" class="status-text">Preparing your slides...</p>
+      
+      <div id="error-container" class="error-container" style="display: none;"></div>
+      
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar" style="width: 5%;"></div>
+      </div>
+      
+      <div id="complete-badge" class="complete-badge" style="display: none;">
+        PowerPoint downloaded successfully
+      </div>
+      
+      <div class="button-container">
+        <button id="generate-btn" class="button primary">
+          <span class="icon download-icon"></span>
+          Generate PowerPoint
+        </button>
+        
+        <button id="view-slideshow-btn" class="button secondary">
+          <span class="icon view-icon"></span>
+          View Slideshow
+        </button>
+        
+        <button id="back-to-recordings-btn" class="button secondary">
+          <span class="icon back-icon"></span>
+          Back to Recordings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/lib/pptxgen.bundle.js"></script>
+  <script src="js/pptx-generator.js"></script>
+</body>
+</html>

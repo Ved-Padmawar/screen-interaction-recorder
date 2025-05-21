@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
+  <title>Screen Interaction Recorder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="popup-body">
+  <div class="popup-container">
+    <h1 class="title">Screen Interaction Recorder</h1>
+    
+    <!-- Recording indicator (hidden by default) -->
+    <div id="recording-indicator" class="recording-indicator" style="display: none;">
+      <div class="recording-icon"></div>
+      Recording in progress...
+    </div>
+    
+    <div class="form">
+      <input 
+        type="text" 
+        id="recording-title"
+        class="input" 
+        placeholder="Recording Title"
+      >
+      
+      <button id="recording-button" class="button primary">
+        Start Recording
+      </button>
+    </div>
+    
+    <button id="view-recordings" class="view-recordings-link">
+      View Saved Recordings
+    </button>
+    
+    <div class="footer">
+      Click on any element to capture it in your recording
+    </div>
+  </div>
+
+  <script src="js/popup.js"></script>
+</body>
+</html>
