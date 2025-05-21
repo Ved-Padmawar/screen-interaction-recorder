@@ -79,8 +79,10 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
 
   // Add event listeners for capturing interactions
   function addInteractionListeners() {
+    // Use left-click listener with shift key check
     document.addEventListener('click', recordClickEvent, true);
-    document.addEventListener('contextmenu', handleRightClick, true);
+    // Remove right-click listener as we're switching back to left-click
+    // document.addEventListener('contextmenu', handleRightClick, true);
     document.addEventListener('submit', recordSubmitEvent, true);
     document.addEventListener('change', recordChangeEvent, true);
   }
@@ -88,7 +90,7 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
   // Remove interaction event listeners
   function removeInteractionListeners() {
     document.removeEventListener('click', recordClickEvent, true);
-    document.removeEventListener('contextmenu', handleRightClick, true);
+    // document.removeEventListener('contextmenu', handleRightClick, true);
     document.removeEventListener('submit', recordSubmitEvent, true);
     document.removeEventListener('change', recordChangeEvent, true);
   }
@@ -103,14 +105,12 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
     }
   }
 
-  // Record a click event
+  // Record a click event, but only when shift key is pressed
   function recordClickEvent(event) {
-    if (!isRecording || isShowingTooltip) return;
+    // Only record the click if the shift key is pressed
+    if (!event.shiftKey) return;
     
-    // Prevent multiple popups from appearing
-    if (document.getElementById('sir-tooltip-popup') || pendingInteraction !== null) {
-      return;
-    }
+    if (!isRecording || isShowingTooltip) return;
     
     // Check if the click is on our tooltip popup or its children
     const tooltipPopup = document.getElementById('sir-tooltip-popup');
@@ -141,10 +141,9 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
                           element.isContentEditable ||
                           (element.tagName === 'DIV' && element.getAttribute('role') === 'textbox');
     
-    // Step 1: Take a screenshot first - BEFORE showing any popup
-    // This ensures the screenshot won't have the tooltip popup in it
+    // Take a screenshot first
     takeScreenshot().then(screenshot => {
-      // Step 2: Prepare complete interaction data
+      // Prepare complete interaction data
       const interactionData = {
         type: 'click',
         tagName: element.tagName.toLowerCase(),
@@ -155,7 +154,7 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
         timestamp: Date.now(),
         pageUrl: window.location.href,
         pageTitle: document.title,
-        tooltipText: null,
+        tooltipText: null, // Will be edited later
         screenshot: screenshot,
         isInputElement: isInputElement,
         
@@ -195,7 +194,7 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
         interactionData.inputName = element.name;
       }
       
-      // Step 3A: For input elements, use generic text and send immediately
+      // For input elements, add generic placeholder tooltip text
       if (isInputElement) {
         if (element.tagName === 'INPUT') {
           if (element.type === 'text' || element.type === 'search') {
@@ -216,38 +215,17 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
         } else {
           interactionData.tooltipText = `Interacting with text field`;
         }
-        
-        // Send and don't show popup for input elements
-        sendInteractionToBackground(interactionData);
-      } 
-      // Step 3B: For regular elements, show tooltip popup
-      else {
-        // Set flag to prevent capturing during tooltip input
-        isShowingTooltip = true;
-        
-        // Show tooltip popup to get user input
-        showTooltipInputPopup(clickX, clickY, tooltipText => {
-          // Add tooltip text to data and send
-          if (tooltipText) {
-            interactionData.tooltipText = tooltipText;
-          }
-          sendInteractionToBackground(interactionData);
-          
-          // Reset tooltip showing flag
-          isShowingTooltip = false;
-        });
       }
+      
+      // Instead of showing tooltip popup, just send the interaction data directly
+      // User will edit tooltips later
+      sendInteractionToBackground(interactionData);
     });
   }
 
-  // Handle right-click and show tooltip input popup
+  // Handle right-click and capture it without showing tooltip during recording
   function handleRightClick(event) {
     if (!isRecording || isShowingTooltip) return;
-    
-    // Prevent multiple popups from appearing
-    if (document.getElementById('sir-tooltip-popup') || pendingInteraction !== null) {
-      return;
-    }
     
     // Prevent the default context menu
     event.preventDefault();
@@ -263,7 +241,14 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
     const element = event.target;
     const rect = element.getBoundingClientRect();
     
-    // Take screenshot immediately before showing any popup
+    // Check if it's an input element
+    const isInputElement = element.tagName === 'INPUT' || 
+                          element.tagName === 'TEXTAREA' || 
+                          element.tagName === 'SELECT' ||
+                          element.isContentEditable ||
+                          (element.tagName === 'DIV' && element.getAttribute('role') === 'textbox');
+    
+    // Take screenshot 
     takeScreenshot().then(screenshot => {
       // Prepare interaction data
       const interactionData = {
@@ -276,8 +261,9 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
         timestamp: Date.now(),
         pageUrl: window.location.href,
         pageTitle: document.title,
-        tooltipText: null,
+        tooltipText: null, // Will be edited later
         screenshot: screenshot,
+        isInputElement: isInputElement,
         
         // Store all position data 
         clientX: clickX,
@@ -304,19 +290,43 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
         documentHeight: document.documentElement.scrollHeight
       };
       
-      // Set flag to prevent capturing during tooltip input
-      isShowingTooltip = true;
+      // Extra details for form elements
+      if (element.tagName === 'A') {
+        interactionData.href = element.href;
+      } else if (element.tagName === 'BUTTON') {
+        interactionData.buttonType = element.type;
+        interactionData.buttonName = element.name;
+      } else if (element.tagName === 'INPUT') {
+        interactionData.inputType = element.type;
+        interactionData.inputName = element.name;
+      }
       
-      // Show tooltip popup to get text input
-      showTooltipInputPopup(clickX, clickY, tooltipText => {
-        if (tooltipText) {
-          interactionData.tooltipText = tooltipText;
+      // For input elements, add generic placeholder tooltip text
+      if (isInputElement) {
+        if (element.tagName === 'INPUT') {
+          if (element.type === 'text' || element.type === 'search') {
+            interactionData.tooltipText = `Typing in ${element.placeholder || 'text field'}`;
+          } else if (element.type === 'checkbox') {
+            interactionData.tooltipText = element.checked ? 'Checked the box' : 'Unchecked the box';
+          } else if (element.type === 'radio') {
+            interactionData.tooltipText = `Selected option: ${element.value || 'radio button'}`;
+          } else {
+            interactionData.tooltipText = `Interacted with ${element.type || 'input field'}`;
+          }
+        } else if (element.tagName === 'TEXTAREA') {
+          interactionData.tooltipText = `Typing in text area`;
+        } else if (element.tagName === 'SELECT') {
+          interactionData.tooltipText = `Selecting from dropdown`;
+        } else if (element.isContentEditable) {
+          interactionData.tooltipText = `Typing in editable area`;
+        } else {
+          interactionData.tooltipText = `Interacting with text field`;
         }
-        sendInteractionToBackground(interactionData);
-        
-        // Reset tooltip showing flag
-        isShowingTooltip = false;
-      });
+      }
+      
+      // Don't show tooltip popup, just send the interaction data directly
+      // User will edit tooltips later
+      sendInteractionToBackground(interactionData);
     });
   }
 

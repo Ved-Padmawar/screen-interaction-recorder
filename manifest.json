@@ -36,7 +36,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["popup.html", "recordings.html", "viewer.html", "pptx-generator.html", "css/*", "js/*", "icons/*"],
+      "resources": ["popup.html", "recordings.html", "viewer.html", "pptx-generator.html", "edit-recording.html", "css/*", "js/*", "icons/*"],
       "matches": ["<all_urls>"]
     }
   ],

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
+  <title>Edit Recording - Screen Interaction Recorder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .edit-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .interactions-list {
+      margin-top: 20px;
+    }
+    
+    .interaction-item {
+      display: flex;
+      margin-bottom: 30px;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #f5f5f5;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .interaction-preview {
+      width: 400px;
+      flex-shrink: 0;
+      margin-right: 20px;
+      position: relative;
+    }
+    
+    .interaction-preview img {
+      width: 100%;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    
+    .click-dot {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: rgba(138, 43, 226, 0.8);
+      border: 2px solid rgba(138, 43, 226, 1);
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+    
+    .interaction-details {
+      flex-grow: 1;
+    }
+    
+    .interaction-info {
+      margin-bottom: 15px;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .tooltip-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    
+    .buttons-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    
+    .action-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    
+    .action-button:hover {
+      background-color: #3e8e41; /* Darker green on hover */
+    }
+    
+    .cancel-button {
+      background-color: #f44336;
+    }
+    
+    .cancel-button:hover {
+      background-color: #d32f2f; /* Darker red on hover */
+    }
+    
+    .progress-indicator {
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="edit-container">
+    <div class="header">
+      <h1 class="title">Edit Recording</h1>
+      <p>Add tooltip text for each interaction</p>
+    </div>
+    
+    <div id="loading-state" class="state-message">
+      Loading recording data...
+    </div>
+    
+    <div id="edit-content" style="display: none;">
+      <div id="progress-indicator" class="progress-indicator">
+        Interaction 1 of 10
+      </div>
+      
+      <div id="interactions-list" class="interactions-list">
+        <!-- Interaction items will be added here dynamically -->
+      </div>
+      
+      <div class="buttons-container">
+        <button id="cancel-button" class="action-button cancel-button">Cancel</button>
+        <button id="save-button" class="action-button">Save & View Recording</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interaction item template -->
+  <template id="interaction-template">
+    <div class="interaction-item">
+      <div class="interaction-preview">
+        <img src="" alt="Interaction screenshot">
+        <div class="click-dot"></div>
+      </div>
+      <div class="interaction-details">
+        <div class="interaction-info">
+          <p class="interaction-url"></p>
+          <p class="interaction-element"></p>
+        </div>
+        <div class="tooltip-container">
+          <label for="tooltip-input">Tooltip text:</label>
+          <input type="text" class="tooltip-input" placeholder="Describe what this click does...">
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="js/edit-recording.js"></script>
+</body>
+</html> 

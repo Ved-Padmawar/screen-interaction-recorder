@@ -172,9 +172,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             } else {
               logDebug('No active tab found for stopping recording');
             }
+            
+            // Open the edit page in a new tab
+            chrome.tabs.create({
+              url: `edit-recording.html?recording=${recording.filename}`
+            }, () => {
+              logDebug('Opened edit recording page');
+              sendResponse({ success: true });
+            });
           });
           
-          sendResponse({ success: true });
+          return true; // Keep the message channel open for async response
         });
         return true; // Keep the message channel open for async response
         
@@ -417,6 +425,53 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: false, error: 'No tab ID' });
         }
         break;
+        
+      case "updateRecordingTooltips":
+        // Handle request to update tooltip text for a recording
+        const filename = message.filename;
+        const updatedSlides = message.slides;
+        
+        if (!filename || !updatedSlides) {
+          sendResponse({ error: "Missing filename or slides data" });
+          return;
+        }
+        
+        // Get the recordings from storage
+        chrome.storage.local.get(['recordings'], (result) => {
+          if (chrome.runtime.lastError) {
+            logDebug(`Error retrieving recordings: ${chrome.runtime.lastError.message}`);
+            sendResponse({ error: chrome.runtime.lastError.message });
+            return;
+          }
+          
+          const recordings = result.recordings || [];
+          const recordingIndex = recordings.findIndex(r => r.filename === filename);
+          
+          if (recordingIndex === -1) {
+            sendResponse({ error: "Recording not found" });
+            return;
+          }
+          
+          // Update the tooltip text for each interaction
+          updatedSlides.forEach((slide, index) => {
+            if (index < recordings[recordingIndex].data.length) {
+              recordings[recordingIndex].data[index].tooltipText = slide.tooltipText;
+            }
+          });
+          
+          // Save the updated recordings
+          chrome.storage.local.set({ recordings: recordings }, () => {
+            if (chrome.runtime.lastError) {
+              logDebug(`Error saving updated tooltips: ${chrome.runtime.lastError.message}`);
+              sendResponse({ error: chrome.runtime.lastError.message });
+              return;
+            }
+            
+            logDebug(`Updated tooltips for recording ${filename}`);
+            sendResponse({ success: true });
+          });
+        });
+        return true; // Keep message channel open for async response
         
       default:
         logDebug(`Unknown action: ${message.action}`);
