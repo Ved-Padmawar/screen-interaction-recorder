@@ -6,15 +6,14 @@ A powerful Chrome extension that records user interactions with web pages and co
 
 ## Overview
 
-Screen Interaction Recorder captures clicks, form submissions, and other interactions with web pages, taking screenshots at each step. It then allows you to add explanations for each interaction, creating comprehensive visual guides that can be exported as PowerPoint presentations or interactive HTML slideshows.
+Screen Interaction Recorder captures interactions with web pages, taking screenshots at each step. Using a customizable keyboard shortcut, you can capture the cursor position and add explanations in real-time, creating comprehensive visual guides that can be exported as PowerPoint presentations or interactive HTML slideshows.
 
 ## Features
 
-- **Effortless Recording**: Capture user interactions with Shift+Click to precisely control what gets recorded
+- **Keyboard Shortcut Capture**: Use a customizable keyboard shortcut (default: Alt+C) to capture cursor position
 - **Automatic Screenshots**: Automatically takes screenshots at each interaction point
-- **Explanatory Tooltips**: Add custom explanations for each interaction
+- **Real-time Tooltips**: Add explanations immediately as you capture each interaction
 - **Interactive Dots**: Purple dots indicate interaction points with tooltips
-- **Post-Recording Editing**: Edit tooltip text after recording in a dedicated edit interface
 - **Multiple Export Options**:
   - Export to PowerPoint presentations
   - Export to interactive HTML slideshows
@@ -22,6 +21,7 @@ Screen Interaction Recorder captures clicks, form submissions, and other interac
 - **Navigation Support**: Automatically handles page redirects during recording
 - **Intuitive Viewer**: Built-in viewer for reviewing and navigating recordings
 - **Secure Processing**: All data processing happens locally in your browser
+- **Configurable Settings**: Customize keyboard shortcuts and other settings
 
 ## Installation
 
@@ -46,19 +46,44 @@ Screen Interaction Recorder captures clicks, form submissions, and other interac
 1. Click the extension icon in your browser toolbar
 2. Enter a title for your recording
 3. Click "Start Recording"
-4. Navigate through the website, performing the interactions you want to record
-5. To capture an interaction, hold the Shift key while clicking on elements
-   - The extension will take a screenshot for each Shift+Click
-   - Regular clicks without Shift will not be recorded, allowing normal navigation
+4. Navigate through the website, positioning your cursor where you want to capture interactions
+5. Press the keyboard shortcut (default: Alt+C) at each point you want to capture
+   - A screenshot will be taken at the current cursor position
+   - A tooltip popup will appear asking for an explanation
+   - Enter a description and click "Save" (or press Ctrl+Enter)
+   - Regular navigation without pressing the shortcut won't be recorded
 6. When finished, click the extension icon again and select "Stop Recording"
-7. The edit page will open automatically, allowing you to:
-   - Review each captured interaction
-   - Add or edit tooltip text for each step
-   - Save your changes or cancel to discard them
+7. You'll be taken to the recordings page where you can view your recording
+
+### Form Submission and Change Events
+
+The extension automatically detects and records:
+- Form submissions (when you submit a form)
+- Change events (when you modify input fields, select options, etc.)
+
+These events are captured alongside your manual keyboard shortcut interactions.
+
+### Customizing Settings
+
+You can customize settings in the extension storage:
+
+```javascript
+// Default settings
+const DEFAULT_CONFIG = {
+  CAPTURE_SHORTCUT: 'alt+c',
+  SHOW_RECORDING_INDICATOR: false,
+  DEBUG_MODE: false
+};
+```
+
+Valid modifier keys are `ctrl`, `alt`, and `shift`. For example:
+- `alt+c` (default)
+- `ctrl+shift+s`
+- `ctrl+alt+x`
 
 ### Viewing and Exporting Recordings
 
-1. Click the extension icon and select "View Recordings" (or it will open automatically after stopping)
+1. Click the extension icon and select "View Saved Recordings"
 2. Click on any recording card to open the viewer
 3. Navigate through the slides using:
    - Arrow buttons at the bottom
@@ -72,10 +97,10 @@ Screen Interaction Recorder captures clicks, form submissions, and other interac
 
 The extension operates in several key components:
 
-1. **Content Script (contentScript.js)**: Injects into web pages to capture Shift+Click interactions and take screenshots
+1. **Content Script (contentScript.js)**: Injects into web pages to capture keyboard shortcut interactions, take screenshots, and display tooltip popups
 2. **Background Script (background.js)**: Manages recording state, processes interactions, and handles data storage
-3. **Popup (popup.html/js)**: Provides the user interface for starting/stopping recordings
-4. **Edit Page (edit-recording.html/js)**: Allows reviewing and editing of tooltip text after recording
+3. **Environment Config (env.js)**: Contains configurable settings like keyboard shortcuts
+4. **Popup (popup.html/js)**: Provides the user interface for starting/stopping recordings
 5. **Recordings Page (recordings.html/js)**: Lists saved recordings and provides access to the viewer
 6. **Viewer (viewer.html/js)**: Interactive slideshow viewer with navigation controls
 7. **PowerPoint Generator (pptx-generator.html/js)**: Converts recordings to PowerPoint presentations
@@ -93,7 +118,7 @@ Each recording contains:
 - Slide count
 - Array of interactions, each with:
   - Screenshot (data URL)
-  - Interaction type (click, submit, etc.)
+  - Interaction type (click, submit, form change, etc.)
   - Page URL and title
   - Element information
   - Tooltip text
@@ -101,22 +126,31 @@ Each recording contains:
 
 ### File Structure
 
-- `manifest.json` - Extension configuration
+- `manifest.json` - Extension configuration (Manifest V3)
+- `env.js` - Environment configuration with customizable settings
 - `contentScript.js` - Injected into web pages to capture interactions
 - `background.js` - Background service worker handling core functionality
 - `popup.html/js` - Extension popup interface
-- `edit-recording.html/js` - Post-recording tooltip editing interface
 - `recordings.html/js` - Recording management page
 - `viewer.html/js` - Slideshow viewer
 - `pptx-generator.html/js` - PowerPoint export functionality
 - `css/` - Stylesheet files
 - `icons/` - Extension icons and UI elements
 
+### Permissions
+
+The extension requires these permissions:
+- `activeTab` - To access the current tab
+- `scripting` - To inject scripts into web pages
+- `storage` - To store recordings locally
+- `downloads` - To export recordings
+- `tabs` - To manage tabs and detect navigation
+
 ## Privacy
 
 The Screen Interaction Recorder:
 - Does not transmit any data to external servers
-- Stores all recordings locally in your browser
+- Stores all recordings locally in your browser's storage
 - Only operates on pages you explicitly choose to record
 - Respects password fields and sensitive form elements
 
@@ -126,9 +160,9 @@ The Screen Interaction Recorder:
 
 - **Recording Not Starting**: Ensure you've granted the extension necessary permissions
 - **Missing Screenshots**: Some secure pages may block screenshot functionality
-- **Interaction Not Recorded**: Make sure you're holding the Shift key while clicking
-- **Tooltip Not Appearing**: For fast-navigating pages, tooltips may be added during the edit phase
-- **Dot Position in Edit View**: The purple dot position in the edit view may differ slightly from the final output, but the final presentation will show correct positioning
+- **Interaction Not Recorded**: Make sure you're pressing the correct keyboard shortcut (default: Alt+C)
+- **Tooltip Not Appearing**: Try adjusting your cursor position or checking if the page is using custom event handling
+- **Keyboard Shortcut Not Working**: Some websites may capture keyboard shortcuts; try a different combination in the settings
 
 ### Support
 

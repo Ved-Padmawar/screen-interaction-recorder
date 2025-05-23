@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
+  <title>Settings - Screen Interaction Recorder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .settings-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .settings-form {
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .form-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    
+    .help-text {
+      color: #666;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    
+    .buttons-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    
+    .status-message {
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 20px;
+      display: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .status-message.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .action-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    
+    .action-button:hover {
+      background-color: #3e8e41;
+    }
+    
+    .reset-button {
+      background-color: #f44336;
+    }
+    
+    .reset-button:hover {
+      background-color: #d32f2f;
+    }
+    
+    .back-button {
+      background-color: #2196F3;
+    }
+    
+    .back-button:hover {
+      background-color: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="header">
+      <h1 class="title">Extension Settings</h1>
+      <p>Configure how Screen Interaction Recorder works</p>
+    </div>
+    
+    <div class="settings-form">
+      <div class="form-group">
+        <label for="shortcut-input">Capture Shortcut:</label>
+        <input type="text" id="shortcut-input" placeholder="e.g., alt+c">
+        <p class="help-text">Format: ctrl+key, alt+key, shift+key, or combinations like ctrl+alt+key</p>
+      </div>
+      
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="show-indicator">
+          Show recording indicator on page
+        </label>
+        <p class="help-text">Displays a small indicator when recording is active</p>
+      </div>
+      
+      <div id="status-message" class="status-message"></div>
+      
+      <div class="buttons-container">
+        <button id="back-button" class="action-button back-button">Back to Recordings</button>
+        <div>
+          <button id="reset-settings" class="action-button reset-button">Reset to Default</button>
+          <button id="save-settings" class="action-button">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/settings.js"></script>
+</body>
+</html> 

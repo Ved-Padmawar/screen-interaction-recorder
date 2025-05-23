@@ -223,17 +223,32 @@ function positionClickIndicator(slide) {
   // Get all position data from the slide
   const { 
     clickX, clickY, 
-    exactClickX, exactClickY, 
+    exactClickX, exactClickY,
+    clickXPercent, clickYPercent,
+    clientX, clientY,
     originalClientX, originalClientY, 
     originalViewportWidth, originalViewportHeight 
   } = slide;
   
   // Calculate position using best available method
   let dotX, dotY;
+  let positionMethod = "unknown";
   
-  // Method 1: Use exact normalized coordinates if available
-  if (typeof clickX === 'number' && typeof clickY === 'number') {
-    // Check if it's a percentage value (for new format)
+  // Method 1: Use clickXPercent/clickYPercent if available (newest format)
+  if (typeof clickXPercent === 'number' && typeof clickYPercent === 'number') {
+    dotX = (clickXPercent / 100) * imgWidth;
+    dotY = (clickYPercent / 100) * imgHeight;
+    positionMethod = "clickPercent";
+  }
+  // Method 2: Use exact normalized coordinates (0-1 range)
+  else if (typeof exactClickX === 'number' && typeof exactClickY === 'number') {
+    dotX = exactClickX * imgWidth;
+    dotY = exactClickY * imgHeight;
+    positionMethod = "exactClick";
+  }
+  // Method 3: Use legacy clickX/clickY values
+  else if (typeof clickX === 'number' && typeof clickY === 'number') {
+    // Check if it's a percentage value (some older format)
     if (clickX > 1 || clickY > 1) {
       dotX = (clickX / 100) * imgWidth;
       dotY = (clickY / 100) * imgHeight;
@@ -241,27 +256,46 @@ function positionClickIndicator(slide) {
       dotX = clickX * imgWidth;
       dotY = clickY * imgHeight;
     }
+    positionMethod = "legacyClick";
   }
-  // Method 2: Use exact pixel coordinates if available
-  else if (exactClickX !== undefined && exactClickY !== undefined) {
-    dotX = exactClickX * imgWidth;
-    dotY = exactClickY * imgHeight;
+  // Method 4: Use client coordinates directly
+  else if (typeof clientX === 'number' && typeof clientY === 'number' && 
+          typeof originalViewportWidth === 'number' && typeof originalViewportHeight === 'number') {
+    const scaleX = imgWidth / originalViewportWidth;
+    const scaleY = imgHeight / originalViewportHeight;
+    
+    dotX = clientX * scaleX;
+    dotY = clientY * scaleY;
+    positionMethod = "clientCoords";
   }
-  // Method 3: Calculate from original client coordinates
-  else if (originalClientX !== undefined && originalViewportWidth !== undefined) {
+  // Method 5: Calculate from original client coordinates
+  else if (typeof originalClientX === 'number' && typeof originalClientY === 'number' && 
+          typeof originalViewportWidth === 'number' && typeof originalViewportHeight === 'number') {
     // Calculate scale ratio
     const scaleX = imgWidth / originalViewportWidth;
     const scaleY = imgHeight / originalViewportHeight;
     
     dotX = originalClientX * scaleX;
     dotY = originalClientY * scaleY;
+    positionMethod = "originalCoords";
   }
   // Fallback method
   else {
     dotX = imgWidth / 2;
     dotY = imgHeight / 2;
     console.warn('Could not determine accurate dot position, using center');
+    positionMethod = "fallback";
   }
+  
+  // Log position method used for debugging
+  console.log(`Using position method: ${positionMethod}`, {
+    dotX, dotY, 
+    availableData: {
+      clickX, clickY, exactClickX, exactClickY, clickXPercent, clickYPercent,
+      clientX, clientY, originalClientX, originalClientY,
+      originalViewportWidth, originalViewportHeight
+    }
+  });
   
   // Ensure dot is within bounds
   dotX = Math.max(0, Math.min(imgWidth, dotX));

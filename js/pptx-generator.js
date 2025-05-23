@@ -139,26 +139,62 @@ async function generatePowerPoint() {
       
       // Calculate the most accurate click position
       let clickX, clickY;
+      let positionMethod = "unknown";
       
-      // Method 1: Use normalized coordinates
-      if (typeof slideData.clickX === 'number' && typeof slideData.clickY === 'number') {
-        clickX = slideData.clickX * imgWidth;
-        clickY = slideData.clickY * imgHeight;
-      } 
-      // Method 2: Calculate from original viewport data
+      // Method 1: Use clickXPercent/clickYPercent if available (newest format)
+      if (typeof slideData.clickXPercent === 'number' && typeof slideData.clickYPercent === 'number') {
+        clickX = (slideData.clickXPercent / 100) * imgWidth;
+        clickY = (slideData.clickYPercent / 100) * imgHeight;
+        positionMethod = "clickPercent";
+      }
+      // Method 2: Use exactClickX/exactClickY (0-1 range)
+      else if (typeof slideData.exactClickX === 'number' && typeof slideData.exactClickY === 'number') {
+        clickX = slideData.exactClickX * imgWidth;
+        clickY = slideData.exactClickY * imgHeight;
+        positionMethod = "exactClick";
+      }
+      // Method 3: Use legacy percentage or normalized values
+      else if (typeof slideData.clickX === 'number' && typeof slideData.clickY === 'number') {
+        // Check if it's a percentage value (older format where values > 1)
+        if (slideData.clickX > 1 || slideData.clickY > 1) {
+          clickX = (slideData.clickX / 100) * imgWidth;
+          clickY = (slideData.clickY / 100) * imgHeight;
+        } else {
+          clickX = slideData.clickX * imgWidth;
+          clickY = slideData.clickY * imgHeight;
+        }
+        positionMethod = "legacyClick";
+      }
+      // Method 4: Use clientX/clientY with viewport information
+      else if (typeof slideData.clientX === 'number' && typeof slideData.clientY === 'number' &&
+               typeof slideData.viewportWidth === 'number' && typeof slideData.viewportHeight === 'number') {
+        const scaleX = imgWidth / slideData.viewportWidth;
+        const scaleY = imgHeight / slideData.viewportHeight;
+        
+        clickX = slideData.clientX * scaleX;
+        clickY = slideData.clientY * scaleY;
+        positionMethod = "clientCoords";
+      }
+      // Method 5: Use original viewport data and client coordinates
       else if (slideData.originalClientX !== undefined && slideData.originalViewportWidth !== undefined) {
         const scaleX = imgWidth / slideData.originalViewportWidth;
         const scaleY = imgHeight / slideData.originalViewportHeight;
         
         clickX = slideData.originalClientX * scaleX;
         clickY = slideData.originalClientY * scaleY;
+        positionMethod = "originalCoords";
       }
       // Fallback method
       else {
         clickX = imgWidth / 2;
         clickY = imgHeight / 2;
         console.warn('Could not determine accurate dot position, using center');
+        positionMethod = "fallback";
       }
+      
+      console.log(`Slide ${i+1}: Using position method: ${positionMethod}`, {
+        clickX, clickY, slideData: slideData
+      });
       
       // Add the purple click indicator dot
       const dotSize = 0.25; // Size in PowerPoint units

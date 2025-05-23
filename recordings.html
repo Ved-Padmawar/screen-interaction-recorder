@@ -14,9 +14,14 @@
   <div class="container">
     <div class="header">
       <h1 class="title">Saved Recordings</h1>
-      <button id="back-button" class="back-button">
-        Back to Recorder
-      </button>
+      <div class="header-buttons">
+        <button id="settings-button" class="header-button">
+          Settings
+        </button>
+        <button id="back-button" class="back-button">
+          Back to Recorder
+        </button>
+      </div>
     </div>
     
     <div id="loading-state" class="state-message">
@@ -61,5 +66,33 @@
   </template>
 
   <script src="js/recordings.js"></script>
+  <style>
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .header-button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    
+    .header-button:hover {
+      background-color: #0b7dda;
+    }
+  </style>
 </body>
 </html>
