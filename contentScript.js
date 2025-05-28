@@ -7,7 +7,7 @@ if (typeof window._sirContentScriptLoaded !== 'undefined') {
 
   // Default configuration
   const DEFAULT_CONFIG = {
-    CAPTURE_SHORTCUT: 'alt+c',
+    CAPTURE_SHORTCUT: 'shift+c',
     SHOW_RECORDING_INDICATOR: false,
     DEBUG_MODE: false
   };
