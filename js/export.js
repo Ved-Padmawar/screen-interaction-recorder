@@ -148,7 +148,7 @@ function generateHTMLContent(recording, slides) {
 
   .tooltip-text {
     display: inline-block;
-    background-color: #8A2BE2; /* Purple color */
+    background-color: #6c6ef7; /* Purple color */
     color: white;
     text-align: left;
     border-radius: 12px;
@@ -169,7 +169,7 @@ function generateHTMLContent(recording, slides) {
     left: -10px;
     border-width: 10px 10px 10px 0;
     border-style: solid;
-    border-color: transparent #8A2BE2 transparent transparent;
+    border-color: transparent #6c6ef7 transparent transparent;
   }
 
   /* Right-aligned tooltip for dots near the right edge */

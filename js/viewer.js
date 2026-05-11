@@ -55,69 +55,64 @@ function addTooltipStyles() {
       position: absolute;
       left: 25px;
       top: -10px;
-      border-radius: 12px;
-      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+      background: #1c2030;
+      border: 1px solid #333a52;
+      border-radius: 8px;
+      border-bottom-left-radius: 2px;
+      color: #ccd3e8;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 11px;
       min-width: 150px;
       max-width: 280px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       z-index: 150;
-      pointer-events: auto; /* Make tooltip clickable */
-      transform-origin: left center;
-      animation: tooltipPop 0.3s ease-out;
-      background-color: transparent;
-      padding: 0;
+      pointer-events: auto;
       cursor: pointer;
+      animation: tooltipPop 0.2s ease-out;
+      transform-origin: left center;
     }
-    
+
     @keyframes tooltipPop {
-      0% { transform: scale(0.5); opacity: 0; }
+      0% { transform: scale(0.85); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
-    
-    .tooltip-text {
-      display: inline-block;
-      background-color: #8A2BE2; /* Purple color to match dot */
-      color: white;
-      text-align: left;
-      border-radius: 12px;
-      padding: 6px 10px;
-      width: 100%;
-      font-size: 14px;
-      line-height: 1.3;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-      font-family: 'Arial', sans-serif;
-    }
-    
-    /* Chat bubble arrow pointing to dot */
-    .tooltip-bubble:before {
-      content: "";
+
+    /* single triangle tail pointing left toward the dot */
+    .tooltip-bubble::before {
+      content: '';
       position: absolute;
       top: 12px;
-      left: -10px;
-      border-width: 10px 10px 10px 0;
+      left: -6px;
+      border-width: 6px 6px 6px 0;
       border-style: solid;
-      border-color: transparent #8A2BE2 transparent transparent;
+      border-color: transparent #333a52 transparent transparent;
     }
-    
+    .tooltip-bubble::after { content: none; }
+
     /* Right-aligned tooltip for dots near the right edge */
     .tooltip-bubble.flip-left {
       left: auto;
       right: 25px;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 2px;
     }
-    
-    .tooltip-bubble.flip-left:before {
+    .tooltip-bubble.flip-left::before {
       left: auto;
-      right: -10px;
-      transform: scaleX(-1);
+      right: -6px;
+      border-width: 6px 0 6px 6px;
+      border-color: transparent transparent transparent #333a52;
     }
-    
+
     /* Make indicator clickable with proper z-index */
     .click-indicator {
       z-index: 200;
-      pointer-events: auto; /* Make the dot clickable */
+      pointer-events: auto;
       cursor: pointer;
-      border: 2px solid rgba(138, 43, 226, 1);
-      background-color: rgba(138, 43, 226, 0.8);
       animation: none;
     }
   `;
@@ -200,7 +195,13 @@ function showSlide(index) {
     
     // Update the slide number
     slideNumber.textContent = `${index + 1} / ${slides.length}`;
-    
+
+    // Update progress bar and nav label
+    const progressFill = document.getElementById('progress-fill');
+    const navLabel = document.getElementById('nav-label');
+    if (progressFill) progressFill.style.width = `${((index + 1) / slides.length) * 100}%`;
+    if (navLabel) navLabel.textContent = `${index + 1} / ${slides.length}`;
+
     // Update navigation buttons
     prevButton.disabled = index === 0;
     nextButton.disabled = index === slides.length - 1;
@@ -305,19 +306,11 @@ function positionClickIndicator(slide) {
   clickIndicator.style.left = `${dotX}px`;
   clickIndicator.style.top = `${dotY}px`;
   
-  // Make the click indicator more visible
-  clickIndicator.style.transform = 'translate(-50%, -50%)'; // Center the indicator
-  clickIndicator.style.width = '20px';
-  clickIndicator.style.height = '20px';
-  clickIndicator.style.backgroundColor = 'rgba(138, 43, 226, 0.8)';
-  clickIndicator.style.border = '2px solid rgba(138, 43, 226, 1)';
+  clickIndicator.style.transform = 'translate(-50%, -50%)';
   clickIndicator.style.borderRadius = '50%';
-  clickIndicator.style.pointerEvents = 'auto'; // Make it clickable
-  clickIndicator.style.cursor = 'pointer'; // Show pointer cursor
-  clickIndicator.style.zIndex = '200'; // Ensure it's above tooltip
-  clickIndicator.style.boxShadow = '0 0 5px 2px rgba(138, 43, 226, 0.5)';
-  
-  // No animation
+  clickIndicator.style.pointerEvents = 'auto';
+  clickIndicator.style.cursor = 'pointer';
+  clickIndicator.style.zIndex = '200';
   clickIndicator.style.animation = 'none';
   
   // Clear any existing tooltip
@@ -328,15 +321,7 @@ function positionClickIndicator(slide) {
     // Create new tooltip bubble
     const tooltipBubble = document.createElement('div');
     tooltipBubble.className = 'tooltip-bubble';
-    tooltipBubble.style.pointerEvents = 'auto'; // Make tooltip clickable
-    tooltipBubble.style.cursor = 'pointer'; // Show pointer cursor
-    tooltipBubble.style.zIndex = '150';
-    
-    const tooltipText = document.createElement('div');
-    tooltipText.className = 'tooltip-text';
-    tooltipText.textContent = slide.tooltipText;
-    
-    tooltipBubble.appendChild(tooltipText);
+    tooltipBubble.textContent = slide.tooltipText;
     clickIndicator.appendChild(tooltipBubble);
     
     // Adjust position to ensure tooltip is visible in viewport
@@ -417,9 +402,7 @@ function exportToPowerPoint() {
   if (!currentRecording) return;
   
   // Instead of sending a message to background script, open the PowerPoint generator page directly
-  chrome.tabs.create({ 
-    url: chrome.runtime.getURL(`pptx-generator.html?recording=${currentRecording.filename}&autostart=true`)
-  });
+  window.location.href = chrome.runtime.getURL(`pptx-generator.html?recording=${currentRecording.filename}&autostart=true`);
 }
 
 // Export to HTML

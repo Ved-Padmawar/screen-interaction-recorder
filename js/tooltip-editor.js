@@ -41,11 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'recordings.html';
     });
 
-    // Update tooltip data as user types
+    // Update tooltip data and live preview as user types
     tooltipInputEditorEl.addEventListener('input', () => {
         if (editableSlidesData[currentSlideIndex]) {
             editableSlidesData[currentSlideIndex].tooltipText = tooltipInputEditorEl.value;
         }
+        updatePreviewBubble(tooltipInputEditorEl.value);
     });
 
     // Add keyboard navigation
@@ -140,17 +141,11 @@ function displaySlide(index) {
     prevSlideEditorBtn.disabled = index === 0;
     nextSlideEditorBtn.disabled = index === totalSlides - 1;
 
-    // Add click indicator
-    const clickIndicator = document.createElement('div');
-    clickIndicator.className = 'click-indicator';
-    clickIndicator.style.position = 'absolute';
-    
-    // Wait for image to load to position the indicator correctly
+    // Wait for image to load — position dot and render preview bubble
     slideImageEditorEl.onload = () => {
         const imgWidth = slideImageEditorEl.width;
         const imgHeight = slideImageEditorEl.height;
-        
-        // Calculate position using available coordinates
+
         let dotX, dotY;
         if (slide.clickXPercent !== undefined && slide.clickYPercent !== undefined) {
             dotX = (slide.clickXPercent / 100) * imgWidth;
@@ -159,40 +154,73 @@ function displaySlide(index) {
             dotX = slide.exactClickX * imgWidth;
             dotY = slide.exactClickY * imgHeight;
         } else if (slide.clientX !== undefined && slide.viewportWidth !== undefined) {
-            const scaleX = imgWidth / slide.viewportWidth;
-            const scaleY = imgHeight / slide.viewportHeight;
-            dotX = slide.clientX * scaleX;
-            dotY = slide.clientY * scaleY;
+            dotX = slide.clientX * (imgWidth / slide.viewportWidth);
+            dotY = slide.clientY * (imgHeight / slide.viewportHeight);
         } else {
             dotX = imgWidth / 2;
             dotY = imgHeight / 2;
         }
 
-        // Position the indicator
-        clickIndicator.style.left = `${dotX}px`;
-        clickIndicator.style.top = `${dotY}px`;
-        clickIndicator.style.transform = 'translate(-50%, -50%)';
-        
-        // Remove any existing indicators and add the new one
+        // Remove stale click indicators
         const existingIndicator = document.querySelector('.click-indicator');
-        if (existingIndicator) {
-            existingIndicator.remove();
-        }
+        if (existingIndicator) existingIndicator.remove();
+
+        // Create hidden click indicator (used for click-to-next-slide)
+        const clickIndicator = document.createElement('div');
+        clickIndicator.className = 'click-indicator';
+        clickIndicator.style.cssText = `position:absolute;left:${dotX}px;top:${dotY}px;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:transparent;z-index:12;cursor:pointer;`;
+        clickIndicator.title = currentSlideIndex < editableSlidesData.length - 1 ? 'Click to go to next slide' : 'Last slide';
+        clickIndicator.addEventListener('click', () => {
+            if (currentSlideIndex < editableSlidesData.length - 1) showNextSlide();
+        });
         slideImageEditorEl.parentElement.appendChild(clickIndicator);
 
-        // Add click event listener to navigate to next slide
-        clickIndicator.addEventListener('click', () => {
-            if (currentSlideIndex < editableSlidesData.length - 1) {
-                showNextSlide();
-            }
-        });
-
-        // Add tooltip to indicate clickable
-        clickIndicator.title = currentSlideIndex < editableSlidesData.length - 1 ? 'Click to go to next slide' : 'Last slide';
+        // Render preview dot + bubble
+        updatePreviewBubble(slide.tooltipText || '', dotX, dotY, imgWidth);
     };
 
     // Focus on textarea for better UX
     tooltipInputEditorEl.focus();
+}
+
+function updatePreviewBubble(text, dotX, dotY, containerWidth) {
+    const container = slideImageEditorEl.parentElement;
+    container.querySelectorAll('.preview-dot, .preview-bubble').forEach(el => el.remove());
+
+    // Use stored dot position if not passed
+    if (dotX === undefined) {
+        const dot = container.querySelector('.click-indicator');
+        if (!dot) return;
+        dotX = parseFloat(dot.style.left);
+        dotY = parseFloat(dot.style.top);
+        containerWidth = container.offsetWidth || 600;
+    }
+
+    // Dot marker
+    const dotEl = document.createElement('div');
+    dotEl.className = 'preview-dot';
+    dotEl.style.left = `${dotX}px`;
+    dotEl.style.top  = `${dotY}px`;
+    container.appendChild(dotEl);
+
+    if (!text) return;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'preview-bubble';
+    bubble.textContent = text;
+
+    const DOT_OFFSET = 14;
+    const flipLeft = dotX > containerWidth * 0.55;
+
+    if (flipLeft) {
+        bubble.classList.add('flip');
+        bubble.style.right = `${containerWidth - dotX + DOT_OFFSET}px`;
+    } else {
+        bubble.style.left = `${dotX + DOT_OFFSET}px`;
+    }
+    bubble.style.top = `${dotY}px`;
+
+    container.appendChild(bubble);
 }
 
 function showPrevSlide() {

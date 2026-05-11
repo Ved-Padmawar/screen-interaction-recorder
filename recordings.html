@@ -4,105 +4,148 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
-  <title>Saved Recordings - Screen Interaction Recorder</title>
+  <title>Saved Recordings — Screen Interaction Recorder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
+  <div class="page-topbar">
+    <span class="topbar-title">Recordings</span>
+    <div class="topbar-spacer"></div>
+    <button id="select-mode-button" class="header-button">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span id="select-mode-label">Select</span>
+    </button>
+    <button id="settings-button" class="header-button">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+  </div>
+
   <div class="container">
-    <div class="header">
-      <h1 class="title">Saved Recordings</h1>
-      <div class="header-buttons">
-        <button id="settings-button" class="header-button">
-          Settings
-        </button>
-        <button id="back-button" class="back-button">
-          Back to Recorder
-        </button>
-      </div>
+
+    <div id="loading-state" class="state-message">Loading recordings…</div>
+
+    <div id="empty-state" class="state-message" style="display:none;">
+      <p>No recordings yet.</p>
+      <p style="margin-top:8px;font-size:13px;">Click the extension icon to start capturing your first flow.</p>
     </div>
 
-    <div id="loading-state" class="state-message">
-      Loading recordings...
-    </div>
+    <div id="recordings-grid" class="recordings-grid"></div>
 
-    <div id="empty-state" class="state-message" style="display: none;">
-      <p>You don't have any saved recordings yet.</p>
-      <p>Click the extension icon to start recording your interactions!</p>
-    </div>
-
-    <div id="recordings-grid" class="recordings-grid">
-      </div>
   </div>
 
   <template id="recording-card-template">
     <div class="recording-card">
+      <div class="card-checkbox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
       <div class="preview">
         <div class="preview-placeholder">
           <div class="preview-icon"></div>
-          Click to view slideshow
+          Click to view
         </div>
         <div class="slide-count"></div>
       </div>
-
       <div class="info">
         <h2 class="recording-title"></h2>
         <p class="recording-date"></p>
-
         <div class="actions">
-          <button class="action-button edit-tooltips"> Edit Tooltips
+          <button class="action-button edit-tooltips">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Tooltips
           </button>
           <button class="action-button export-html">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
             Export HTML
           </button>
           <button class="action-button danger delete-recording">
-            Delete
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
           </button>
         </div>
       </div>
     </div>
   </template>
 
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Settings</span>
+        <button id="modal-close" class="modal-close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="shortcut-input">Capture Shortcut</label>
+          <input type="text" id="shortcut-input" placeholder="e.g. shift+c">
+          <p class="help-text">Supported: <code>ctrl+key</code>, <code>shift+key</code>, <code>alt+key</code></p>
+        </div>
+        <div class="form-group">
+          <label class="toggle-label" for="show-indicator">
+            <span class="toggle-track">
+              <input type="checkbox" id="show-indicator" class="toggle-input">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-text">Show recording indicator on page</span>
+          </label>
+          <p class="help-text">Displays a small banner on the active tab while recording</p>
+        </div>
+        <div id="settings-status" class="status-message"></div>
+      </div>
+      <div class="modal-footer">
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button id="reset-settings" class="back-button">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+            Reset
+          </button>
+          <button id="save-settings" class="btn-primary">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  <div id="bulk-bar" class="bulk-bar" style="display:none;">
+    <span id="bulk-count" class="bulk-count">0 selected</span>
+    <button id="bulk-select-all" class="back-button">Select all</button>
+    <button id="bulk-delete" class="btn-danger">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      Delete
+    </button>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Delete recording?</span>
+        <button id="delete-modal-close" class="modal-close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="delete-modal-message" class="delete-modal-message">This recording will be permanently deleted.</p>
+      </div>
+      <div class="modal-footer">
+        <div style="display:flex;gap:8px;margin-left:auto;">
+          <button id="delete-cancel" class="back-button">Cancel</button>
+          <button id="delete-confirm" class="btn-danger">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/recordings.js"></script>
-  <style>
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .header-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .header-button { /* Style for Settings button, can be reused */
-      background-color: #555; /* Darker grey for secondary actions */
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-    .header-button:hover {
-      background-color: #777;
-    }
-    .actions { /* Ensure buttons fit */
-        display: flex;
-        flex-wrap: wrap; /* Allow buttons to wrap if space is tight */
-        gap: 8px;
-        margin-top: 12px; /* Add some space above buttons */
-    }
-    .action-button {
-        flex-grow: 1; /* Allow buttons to grow */
-        min-width: 100px; /* Minimum width for readability */
-        padding: 8px 10px; /* Adjust padding if needed */
-    }
-  </style>
 </body>
 </html>

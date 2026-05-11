@@ -250,8 +250,8 @@ async function generatePowerPoint() {
           y: tooltipY,
           w: tooltipWidth,
           h: 0.8,
-          fill: { color: '8A2BE2' }, // Purple bubble
-          line: { color: '8A2BE2', width: 1 },
+          fill: { color: '6C6EF7' }, // Purple bubble
+          line: { color: '6C6EF7', width: 1 },
           rectRadius: 0.2 // Rounded corners
         });
         
@@ -288,8 +288,8 @@ async function generatePowerPoint() {
         
         slide.addShape(pptx.ShapeType.triangle, {
           points: arrowPoints,
-          fill: { color: '8A2BE2' }, // Match bubble color
-          line: { color: '8A2BE2', width: 1 }
+          fill: { color: '6C6EF7' }, // Match bubble color
+          line: { color: '6C6EF7', width: 1 }
         });
       }
     }

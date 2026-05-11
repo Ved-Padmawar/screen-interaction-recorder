@@ -4,296 +4,420 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self';">
-  <title>Tooltip Editor - Screen Interaction Recorder</title>
+  <title>Tooltip Editor — Screen Interaction Recorder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
     body {
-      background-color: #1a1a1a;
-      color: white;
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      height: 100vh;
+      background: #05060a;
       overflow: hidden;
+      height: 100vh;
     }
-    
+
     .editor-container {
       display: flex;
       flex-direction: column;
       height: 100vh;
-      width: 100vw;
     }
-    
+
     .editor-header {
-      background-color: #2a2a2a;
-      padding: 12px 24px;
+      background: #14171e;
+      border-bottom: 1px solid #333a52;
+      padding: 0 20px;
+      height: 52px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      gap: 12px;
       flex-shrink: 0;
       z-index: 100;
     }
-    
+
     .editor-header .title {
-      font-size: 1.2em;
+      font-size: 14px;
+      font-weight: 600;
+      color: #edf0f8;
+      letter-spacing: -0.01em;
       margin: 0;
-      color: white;
     }
-    
+
+    .editor-step-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
+      background: rgba(108,110,247,0.08);
+      border: 1px solid rgba(108,110,247,.2);
+      color: #8a8bfa;
+      border-radius: 20px;
+      padding: 2px 10px;
+    }
+
     .header-controls {
+      margin-left: auto;
       display: flex;
-      gap: 12px;
+      gap: 8px;
     }
-    
-    .control-button {
-      padding: 8px 12px;
-      font-size: 13px;
-      border: none;
-      border-radius: 4px;
-      background-color: #3a3a3a;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    
-    .control-button:hover {
-      background-color: #505050;
-    }
-    
-    .control-button.primary {
-      background-color: #4285f4;
-    }
-    
-    .control-button.primary:hover {
-      background-color: #3367d6;
-    }
-    
-    .control-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
+
     .editor-main {
       display: flex;
       flex: 1;
       overflow: hidden;
     }
-    
+
+    /* left: screenshot area */
     .slide-viewer {
-      flex: 2;
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #1e1e1e;
-      padding: 20px;
+      background: #05060a;
+      padding: 24px;
       position: relative;
+      overflow: hidden;
     }
-    
+
     .slide-display {
       position: relative;
       max-width: 85%;
-      max-height: 75%;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      max-height: 78%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+      border-radius: 10px;
+      border: 1px solid #333a52;
+      overflow: hidden;
     }
-    
+
     .slide-image {
       width: 100%;
       height: auto;
-      max-width: 100%;
-      max-height: calc(100vh - 200px);
+      max-height: calc(100vh - 180px);
       object-fit: contain;
       display: block;
-      border: 1px solid #444;
     }
-    
+
     .slide-counter {
       position: absolute;
       bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    
-    .editor-panel {
-      flex: 1;
-      background-color: #2a2a2a;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid #444;
-      min-width: 320px;
-      max-width: 400px;
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
-    }
-    
-    .panel-title {
-      margin: 0 0 20px 0;
-      font-size: 1.2em;
-      color: #fff;
-      font-weight: 500;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #444;
-    }
-    
-    .tooltip-input {
-      width: 100%;
-      height: 150px;
-      padding: 16px;
-      border-radius: 8px;
-      border: 2px solid #444;
-      background-color: #1a1a1a;
-      color: #fff;
-      font-size: 15px;
-      line-height: 1.5;
-      font-family: 'Roboto', sans-serif;
-      resize: vertical;
-      margin-bottom: 24px;
-      transition: border-color 0.2s ease;
-    }
-    
-    .tooltip-input:focus {
-      outline: none;
-      border-color: #4285f4;
-      box-shadow: 0 0 0 1px #4285f4;
-    }
-    
-    .navigation-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      background-color: #1a1a1a;
-      padding: 12px;
-      border-radius: 8px;
-      gap: 8px;
-    }
-    
-    .nav-button {
-      padding: 10px 16px;
-      background-color: #3a3a3a;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 100px;
+      background: rgba(7,8,10,0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid #333a52;
+      color: #a8b2cc;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
       white-space: nowrap;
-      user-select: none;
     }
 
-    .nav-button span {
-      display: inline-block;
-      vertical-align: middle;
-    }
-    
-    .nav-button:hover:not(:disabled) {
-      background-color: #4285f4;
-      transform: translateY(-1px);
-    }
-    
-    .nav-button:active:not(:disabled) {
-      transform: translateY(0);
-    }
-    
-    .nav-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background-color: #333;
-    }
-    
-    .slide-info {
-      text-align: center;
-      color: #ccc;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 6px 12px;
-      background-color: #333;
-      border-radius: 4px;
+    /* right: edit panel */
+    .editor-panel {
+      width: 300px;
       flex-shrink: 0;
-      min-width: 80px;
+      background: #14171e;
+      border-left: 1px solid #333a52;
+      display: flex;
+      flex-direction: column;
     }
-    
-    .status-message {
+
+    .panel-inner {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #5a6382;
+      margin-bottom: 7px;
+    }
+
+    .tooltip-input {
+      width: 100%;
+      min-height: 110px;
+      padding: 10px 13px;
+      background: #1c2030;
+      border: 1px solid #333a52;
+      border-radius: 10px;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 13.5px;
+      color: #edf0f8;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .tooltip-input::placeholder { color: #5a6382; }
+    .tooltip-input:focus {
+      border-color: #6c6ef7;
+      box-shadow: 0 0 0 3px rgba(108,110,247,0.18);
+    }
+
+    .navigation-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1c2030;
+      border: 1px solid #333a52;
+      border-radius: 10px;
       padding: 10px;
-      border-radius: 4px;
-      margin-top: 10px;
-      font-size: 14px;
+    }
+
+    .nav-button {
+      flex: 1;
+      padding: 8px 10px;
+      background: #252a3a;
+      border: 1px solid #333a52;
+      border-radius: 8px;
+      color: #a8b2cc;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-button:hover:not(:disabled) { background: #2f3447; color: #edf0f8; border-color: #404766; }
+    .nav-button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .slide-info {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: #7e8aaa;
+      background: #252a3a;
+      border: 1px solid #333a52;
+      border-radius: 20px;
+      padding: 3px 10px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .panel-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #333a52;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .status-message {
+      padding: 9px 13px;
+      border-radius: 8px;
+      margin-top: 4px;
+      font-size: 13px;
       text-align: center;
       display: none;
     }
-    
     .status-message.success {
-      background-color: #4CAF50;
-      color: white;
+      background: rgba(76,206,168,0.1);
+      color: #4ccea8;
+      border: 1px solid rgba(76,206,168,.3);
     }
-    
     .status-message.error {
-      background-color: #f44336;
-      color: white;
+      background: rgba(240,90,90,0.08);
+      color: #f05a5a;
+      border: 1px solid rgba(240,90,90,.3);
     }
-    
     .status-message.info {
-      background-color: #2196F3;
-      color: white;
+      background: rgba(108,110,247,0.08);
+      color: #8a8bfa;
+      border: 1px solid rgba(108,110,247,.2);
     }
-    
+
     .loading-state {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      font-size: 18px;
-      color: #ccc;
+      font-size: 16px;
+      color: #7e8aaa;
+    }
+
+    .btn-save {
+      width: 100%;
+      padding: 10px;
+      background: #6c6ef7;
+      border: 1px solid #5254e0;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background 0.15s;
+    }
+    .btn-save:hover { background: #8a8bfa; }
+
+    .btn-back-editor {
+      width: 100%;
+      padding: 9px;
+      background: #1c2030;
+      border: 1px solid #333a52;
+      border-radius: 10px;
+      color: #7e8aaa;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-back-editor:hover { background: #252a3a; color: #edf0f8; border-color: #404766; }
+
+    /* live tooltip preview on screenshot */
+    .preview-dot {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #6c6ef7;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      pointer-events: none;
+      box-shadow:
+        0 0 0 4px rgba(108,110,247,0.15),
+        0 0 10px rgba(108,110,247,0.45);
+    }
+
+    .preview-bubble {
+      position: absolute;
+      transform: translateY(-50%);
+      z-index: 11;
+      pointer-events: none;
+      background: #1c2030;
+      border: 1px solid #333a52;
+      border-radius: 8px;
+      border-bottom-left-radius: 2px;
+      color: #ccd3e8;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 11px;
+      max-width: 220px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .preview-bubble::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: -6px;
+      border-width: 6px 6px 6px 0;
+      border-style: solid;
+      border-color: transparent #333a52 transparent transparent;
+    }
+    .preview-bubble::after { content: none; }
+    .preview-bubble.flip {
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 2px;
+    }
+    .preview-bubble.flip::before {
+      left: auto; right: -6px;
+      border-width: 6px 0 6px 6px;
+      border-color: transparent transparent transparent #333a52;
+    }
+
+    /* nav hint */
+    .nav-hint {
+      font-size: 11px;
+      color: #333a52;
+      text-align: center;
+      line-height: 1.7;
+      padding: 0 4px;
+    }
+    .nav-hint kbd {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      background: #1c2030;
+      border: 1px solid #2f3447;
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #404766;
     }
   </style>
 </head>
 <body>
   <div class="editor-container">
+
     <div class="editor-header">
-      <h1 id="editor-title" class="title">Tooltip Editor</h1>
-      <div class="header-controls">
-        <button id="save-all-tooltips" class="control-button primary">Save All Changes</button>
-        <button id="back-to-recordings-editor" class="control-button">Back to Recordings</button>
-      </div>
+      <button id="back-to-recordings-editor" class="btn-back-editor" style="width:auto;padding:7px 14px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <h1 id="editor-title" class="title">Edit Tooltips</h1>
+      <span class="editor-step-pill">Step <span id="current-slide-number-editor">1</span> / <span id="total-slides-editor">1</span></span>
     </div>
 
-    <div id="loading-state-editor" class="loading-state">Loading recording...</div>
+    <div id="loading-state-editor" class="loading-state">Loading recording…</div>
 
-    <div class="editor-main" style="display: none;">
+    <div class="editor-main" style="display:none;">
+
       <div class="slide-viewer">
         <div class="slide-display">
-          <img id="slide-image-editor" class="slide-image" src="" alt="Slide Image">
+          <img id="slide-image-editor" class="slide-image" src="" alt="Slide">
         </div>
-        <div id="slide-counter-display" class="slide-counter">Slide 1/1</div>
+        <div id="slide-counter-display" class="slide-counter">Slide 1 / 1</div>
       </div>
-      
+
       <div class="editor-panel">
-        <h3 class="panel-title">Edit Tooltip for Slide <span id="current-slide-number-editor">1</span>/<span id="total-slides-editor">1</span></h3>
-        
-        <textarea id="tooltip-input-editor" class="tooltip-input" placeholder="Enter tooltip text for this interaction..."></textarea>
-        
-        <div class="navigation-controls">
-          <button id="prev-slide-editor" class="nav-button"><span>← Previous</span></button>
-          <div id="slide-info" class="slide-info">Slide 1/1</div>
-          <button id="next-slide-editor" class="nav-button"><span>Next →</span></button>
+        <div class="panel-inner">
+
+          <div>
+            <div class="panel-title">Tooltip Text</div>
+            <textarea
+              id="tooltip-input-editor"
+              class="tooltip-input"
+              placeholder="Describe what to do at this step…"
+            ></textarea>
+          </div>
+
+          <div>
+            <div class="panel-title">Navigate Steps</div>
+            <div class="navigation-controls">
+              <button id="prev-slide-editor" class="nav-button">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                Prev
+              </button>
+              <div id="slide-info" class="slide-info">1 / 1</div>
+              <button id="next-slide-editor" class="nav-button">
+                Next
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div id="status-message-editor" class="status-message"></div>
+
         </div>
-        
-        <div id="status-message-editor" class="status-message"></div>
+
+        <div class="panel-footer">
+          <button id="save-all-tooltips" class="btn-save">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+            Save All Changes
+          </button>
+          <p class="nav-hint"><kbd>←</kbd> <kbd>→</kbd> arrow keys · click dot · or use buttons above</p>
+        </div>
       </div>
+
     </div>
   </div>
 

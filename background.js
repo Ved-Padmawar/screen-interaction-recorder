@@ -91,6 +91,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case "stopRecording":
+      if (!isRecording) {
+        logDebug('Stop requested but not recording — ignoring duplicate.');
+        sendResponse({ success: false, error: 'Not recording.' });
+        return true;
+      }
       isRecording = false;
       logDebug(`Stopping recording: ${recordingTitle}. Collected ${recordingData.length} interactions.`);
       const currentActiveTabId = activeTabId; // Preserve for use in sendMessage
@@ -106,17 +111,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         filename: `recording_${Date.now()}`
       };
 
-      saveRecording(recording, (success) => { // Modified saveRecording to pass success status
+      // Clear in-memory recording state immediately so any duplicate stop is a no-op
+      recordingData = [];
+      recordingTitle = '';
+
+      saveRecording(recording, (success) => {
         if (currentActiveTabId) {
             sendMessageToContentScript(currentActiveTabId, { action: 'stopRecording' }, (msgSuccess) => {
             logDebug(`Direct message to stop recording in content script ${msgSuccess ? 'succeeded' : 'failed'}`);
           });
         }
         if (success) {
-            chrome.tabs.create({ url: 'recordings.html' }, () => {
-                logDebug('Opened recordings page');
-                sendResponse({ success: true });
-            });
+            const targetTabId = (sender.tab && sender.tab.id) || currentActiveTabId;
+            const recordingsUrl = chrome.runtime.getURL('recordings.html');
+            if (targetTabId) {
+                chrome.tabs.update(targetTabId, { url: recordingsUrl }, () => {
+                    logDebug('Navigated to recordings page');
+                    sendResponse({ success: true });
+                });
+            } else {
+                chrome.tabs.create({ url: recordingsUrl }, () => {
+                    logDebug('Opened recordings page in new tab');
+                    sendResponse({ success: true });
+                });
+            }
         } else {
             logDebug('Failed to save recording, not opening recordings page.');
             sendResponse({ success: false, error: 'Failed to save recording.' });
@@ -265,9 +283,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const recording = recordings.find(r => r.filename === message.filename);
         if (recording) {
           logDebug(`Found recording: ${recording.title}, opening pptx-generator.html`);
-          chrome.tabs.create({
-            url: chrome.runtime.getURL(`pptx-generator.html?recording=${message.filename}&autostart=true`)
-          });
+          const targetTabId = (sender.tab && sender.tab.id) || currentActiveTabId;
+          const pptxUrl = chrome.runtime.getURL(`pptx-generator.html?recording=${message.filename}&autostart=true`);
+          if (targetTabId) {
+            chrome.tabs.update(targetTabId, { url: pptxUrl });
+          } else {
+            chrome.tabs.create({ url: pptxUrl });
+          }
           sendResponse({ success: true });
         } else {
           logDebug(`Recording not found for PowerPoint generation: ${message.filename}`);
@@ -316,6 +338,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       logDebug('Delete recording failed: no filename provided');
       sendResponse({ success: false });
+      break;
+
+    case "deleteRecordings":
+      if (Array.isArray(message.filenames) && message.filenames.length > 0) {
+        logDebug(`Bulk deleting ${message.filenames.length} recordings`);
+        deleteRecordings(message.filenames, (result) => {
+          sendResponse(result);
+        });
+        return true;
+      }
+      sendResponse({ success: false, error: 'No filenames provided' });
       break;
 
     default:
@@ -458,6 +491,28 @@ function deleteRecording(filename, callback) {
   });
 }
 
+function deleteRecordings(filenames, callback) {
+  chrome.storage.local.get(['recordings'], (result) => {
+    if (chrome.runtime.lastError) {
+      if (callback) callback({ success: false, error: chrome.runtime.lastError.message });
+      return;
+    }
+    const recordings = result.recordings || [];
+    const filenameSet = new Set(filenames);
+    const updated = recordings.filter(r => !filenameSet.has(r.filename));
+    const deletedCount = recordings.length - updated.length;
+
+    chrome.storage.local.set({ recordings: updated }, () => {
+      if (chrome.runtime.lastError) {
+        if (callback) callback({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        logDebug(`Bulk delete removed ${deletedCount} recordings`);
+        if (callback) callback({ success: true, deleted: deletedCount });
+      }
+    });
+  });
+}
+
 function generateHTMLSlideshow(recording, slides) {
   logDebug(`Generating HTML slideshow for ${recording.title} with ${slides.length} slides`);
 
@@ -587,19 +642,19 @@ function generateHTMLSlideshow(recording, slides) {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background-color: rgba(138, 43, 226, 0.8);
-      border: 2px solid rgb(138, 43, 226);
+      background-color: rgba(108, 110, 247, 0.9);
+      border: 2px solid rgb(108, 110, 247);
       transform: translate(-50%, -50%);
       cursor: pointer;
       z-index: 200;
-      box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+      box-shadow: 0 0 10px rgba(108, 110, 247, 0.3);
     }
     .tooltip-bubble {
       position: absolute;
       left: 28px; /* Position relative to the dot's edge */
       top: 50%;
       transform: translateY(-50%);
-      background-color: #8A2BE2;
+      background-color: #6c6ef7;
       color: white;
       padding: 8px 12px;
       border-radius: 12px;
@@ -625,7 +680,7 @@ function generateHTMLSlideshow(recording, slides) {
       transform: translateY(-50%);
       border-width: 8px 8px 8px 0;
       border-style: solid;
-      border-color: transparent #8A2BE2 transparent transparent;
+      border-color: transparent #6c6ef7 transparent transparent;
     }
     .tooltip-bubble.flip-left {
       left: auto;
@@ -634,7 +689,7 @@ function generateHTMLSlideshow(recording, slides) {
     .tooltip-bubble.flip-left::before {
       left: auto;
       right: -8px;
-      border-color: transparent transparent transparent #8A2BE2;
+      border-color: transparent transparent transparent #6c6ef7;
       border-width: 8px 0 8px 8px;
     }
     .slide-number {

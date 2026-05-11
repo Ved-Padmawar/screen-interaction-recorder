@@ -85,9 +85,12 @@ function setRecordingState(recording) {
 function openRecordings() {
   const recordingsUrl = chrome.runtime.getURL('recordings.html');
   
-  chrome.tabs.create({ 
-    url: recordingsUrl,
-    active: true
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]) {
+      chrome.tabs.update(tabs[0].id, { url: recordingsUrl });
+    } else {
+      chrome.tabs.create({ url: recordingsUrl, active: true });
+    }
   });
   
   // Close the popup
