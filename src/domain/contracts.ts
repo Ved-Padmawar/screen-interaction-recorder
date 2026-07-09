@@ -1,5 +1,4 @@
 export const AppView = {
-  Home: 'home',
   Popup: 'popup',
   Recordings: 'recordings',
   Viewer: 'viewer',
@@ -34,7 +33,6 @@ export type RuntimeAction = (typeof RuntimeAction)[keyof typeof RuntimeAction]
 export type CaptureSettings = {
   CAPTURE_SHORTCUT: string
   SHOW_RECORDING_INDICATOR: boolean
-  DEBUG_MODE: boolean
 }
 
 export type InteractionDetails = {
@@ -42,72 +40,38 @@ export type InteractionDetails = {
   title?: string
   elementType?: string
   elementId?: string
-  elementClass?: string
   elementText?: string
-  scrollX?: number
-  scrollY?: number
 }
 
+/**
+ * The click point is stored only as a percentage of the captured viewport
+ * (0-100 on each axis). Percentages are resolution-independent, so they stay
+ * correct when the screenshot is scaled to fit whatever surface renders it.
+ * Interactions that have no click point (form submit, input change) omit both.
+ */
 export type RecordingInteraction = {
-  type?: string
-  timestamp?: number
+  type: 'click' | 'submit' | 'change'
+  timestamp: number
   screenshot?: string | null
   screenshotId?: string
-  clickX?: number
-  clickY?: number
   clickXPercent?: number
   clickYPercent?: number
-  exactClickX?: number
-  exactClickY?: number
-  clientX?: number
-  clientY?: number
-  originalClientX?: number
-  originalClientY?: number
-  originalViewportWidth?: number
-  originalViewportHeight?: number
   tooltipText?: string | null
   pageUrl?: string
   pageTitle?: string
   tagName?: string
   id?: string | null
-  className?: string | null
   text?: string | null
-  value?: string | boolean | null
-  name?: string | null
-  href?: string
-  buttonType?: string
-  buttonName?: string
-  inputType?: string
-  inputName?: string
-  formAction?: string | null
-  formMethod?: string
-  formData?: Record<string, string>
   isInputElement?: boolean
-  pageX?: number
-  pageY?: number
-  offsetX?: number
-  offsetY?: number
-  elementRect?: {
-    left: number
-    top: number
-    width: number
-    height: number
-  }
-  viewportWidth?: number
-  viewportHeight?: number
-  documentWidth?: number
-  documentHeight?: number
-  scrollX?: number
-  scrollY?: number
 }
 
 export type Recording = {
   title: string
-  timestamp?: number
+  timestamp: number
   date: string
-  duration?: number
+  duration: number
   data: RecordingInteraction[]
-  slideCount?: number
+  slideCount: number
   filename: string
 }
 
@@ -115,22 +79,12 @@ export type RecordingSlide = {
   index: number
   image: string
   screenshotId?: string
-  clickX?: number
-  clickY?: number
   clickXPercent?: number
   clickYPercent?: number
-  exactClickX?: number
-  exactClickY?: number
-  clientX?: number
-  clientY?: number
-  originalClientX?: number
-  originalClientY?: number
-  originalViewportWidth?: number
-  originalViewportHeight?: number
-  tooltipText?: string | null
-  timestamp?: number
-  type?: string
-  details?: InteractionDetails
+  tooltipText: string | null
+  timestamp: number
+  type: RecordingInteraction['type']
+  details: InteractionDetails
 }
 
 export type RuntimeRequest =
@@ -177,5 +131,4 @@ export type ScreenshotRecord = {
 export const DEFAULT_CAPTURE_SETTINGS: CaptureSettings = {
   CAPTURE_SHORTCUT: 'shift+c',
   SHOW_RECORDING_INDICATOR: false,
-  DEBUG_MODE: false,
 }

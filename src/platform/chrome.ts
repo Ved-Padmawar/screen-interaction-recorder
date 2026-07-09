@@ -40,21 +40,15 @@ export async function getRecordingSlides(filename: string) {
   return response.slides ?? []
 }
 
+/** Navigates the current extension page to another one. */
 export function navigateToExtensionPage(path: string) {
-  const url = extensionUrl(path)
-
-  if (typeof chrome !== 'undefined' && chrome.tabs?.update) {
-    chrome.tabs.update({ url })
-    return
-  }
-
-  window.location.href = url
+  window.location.assign(extensionUrl(path))
 }
 
 export function openRecordingsFromPopup() {
   const url = extensionUrl('recordings.html')
   if (typeof chrome === 'undefined' || !chrome.tabs) {
-    window.location.href = url
+    window.location.assign(url)
     return
   }
 

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { cpSync, copyFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -23,7 +23,33 @@ function copyExtensionAssets() {
   }
 }
 
-export default defineConfig({
+/**
+ * MV3 injects content scripts as classic scripts, so `contentScript.js` must be
+ * a self-contained IIFE with no `import` statements. Sharing the main build pass
+ * would let Rollup hoist common modules (domain/contracts) into a chunk the
+ * content script could only reach via an ES import, which throws
+ * "Cannot use import statement outside a module" at injection time. So it gets
+ * its own pass. The extension pages and the background service worker are
+ * modules and bundle normally.
+ *
+ * The content-script pass runs second and must not wipe the main pass's output.
+ */
+const contentScriptConfig: UserConfig = {
+  build: {
+    outDir: 'dist',
+    emptyOutDir: false,
+    minify: true,
+    rollupOptions: {
+      input: { contentScript: 'src/contentScript.ts' },
+      output: {
+        entryFileNames: '[name].js',
+        format: 'iife',
+      },
+    },
+  },
+}
+
+const extensionConfig: UserConfig = {
   plugins: [react(), tailwindcss(), copyExtensionAssets()],
   build: {
     rollupOptions: {
@@ -33,7 +59,6 @@ export default defineConfig({
         viewer: 'viewer.html',
         tooltipEditor: 'tooltip-editor.html',
         background: 'src/background.ts',
-        contentScript: 'src/contentScript.ts',
       },
       output: {
         entryFileNames: '[name].js',
@@ -42,4 +67,6 @@ export default defineConfig({
       },
     },
   },
-})
+}
+
+export default defineConfig(({ mode }) => (mode === 'content-script' ? contentScriptConfig : extensionConfig))

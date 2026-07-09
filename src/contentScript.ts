@@ -1,18 +1,4 @@
-import type { CaptureSettings, RecordingInteraction } from './domain/contracts'
-
-const RuntimeAction = {
-  GetRecordingStatus: 'getRecordingStatus',
-  RecordInteraction: 'recordInteraction',
-  StartRecording: 'startRecording',
-  StopRecording: 'stopRecording',
-  TakeScreenshot: 'takeScreenshot',
-} as const
-
-const DEFAULT_CAPTURE_SETTINGS: CaptureSettings = {
-  CAPTURE_SHORTCUT: 'shift+c',
-  SHOW_RECORDING_INDICATOR: false,
-  DEBUG_MODE: false,
-}
+import { DEFAULT_CAPTURE_SETTINGS, RuntimeAction, type CaptureSettings, type RecordingInteraction } from './domain/contracts'
 
 const MAX_SCREENSHOT_WIDTH = 1920
 const SCREENSHOT_QUALITY = 0.86
@@ -146,20 +132,10 @@ function initializeContentScript() {
     isCapturing = true
 
     try {
-      const formData: Record<string, string> = {}
-      Array.from(form.elements).forEach((element) => {
-        if (element instanceof HTMLInputElement && element.name && element.type !== 'password') {
-          formData[element.name] = element.value
-        }
-      })
-
       sendInteractionToBackground({
         type: 'submit',
         tagName: 'form',
         id: form.id || null,
-        formAction: form.action || null,
-        formMethod: form.method || 'get',
-        formData,
         timestamp: Date.now(),
         pageUrl: window.location.href,
         pageTitle: document.title,
@@ -185,8 +161,6 @@ function initializeContentScript() {
         type: 'change',
         tagName: element.tagName.toLowerCase(),
         id: element.id || null,
-        name: element.name || null,
-        value: element instanceof HTMLInputElement && ['checkbox', 'radio'].includes(element.type) ? element.checked : element.value,
         timestamp: Date.now(),
         pageUrl: window.location.href,
         pageTitle: document.title,
@@ -237,55 +211,22 @@ function createClickInteraction(
   clientY: number,
   screenshot: string | null,
 ): RecordingInteraction {
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  const exactClickX = clientX / viewportWidth
-  const exactClickY = clientY / viewportHeight
-  const rect = element.getBoundingClientRect()
-  const inputElement = element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement
+  const inputElement =
+    element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement
 
   return {
     type: 'click',
     tagName: element.tagName.toLowerCase(),
     id: element.id || null,
-    className: typeof element.className === 'string' ? element.className : null,
     text: element.textContent?.trim().slice(0, 200) || null,
-    value: inputElement ? element.value : null,
     timestamp: Date.now(),
     pageUrl: window.location.href,
     pageTitle: document.title,
     tooltipText: null,
     screenshot,
     isInputElement: inputElement || element.getAttribute('role') === 'textbox',
-    clientX,
-    clientY,
-    exactClickX,
-    exactClickY,
-    clickXPercent: exactClickX * 100,
-    clickYPercent: exactClickY * 100,
-    pageX: clientX + window.scrollX,
-    pageY: clientY + window.scrollY,
-    offsetX: clientX - rect.left,
-    offsetY: clientY - rect.top,
-    originalClientX: clientX,
-    originalClientY: clientY,
-    originalViewportWidth: viewportWidth,
-    originalViewportHeight: viewportHeight,
-    elementRect: {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-    },
-    scrollX: window.scrollX,
-    scrollY: window.scrollY,
-    viewportWidth,
-    viewportHeight,
-    documentWidth: document.documentElement.scrollWidth,
-    documentHeight: document.documentElement.scrollHeight,
-    ...(element instanceof HTMLAnchorElement ? { href: element.href } : {}),
-    ...(element instanceof HTMLButtonElement ? { buttonType: element.type, buttonName: element.name } : {}),
-    ...(element instanceof HTMLInputElement ? { inputType: element.type, inputName: element.name } : {}),
+    clickXPercent: (clientX / window.innerWidth) * 100,
+    clickYPercent: (clientY / window.innerHeight) * 100,
   }
 }
 

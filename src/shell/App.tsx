@@ -18,11 +18,6 @@ function getCurrentView(): AppView {
     case 'tooltip-editor.html':
     case AppView.TooltipEditor:
       return AppView.TooltipEditor
-    case 'recordings.html':
-    case AppView.Recordings:
-    case '':
-    case 'index.html':
-      return AppView.Recordings
     default:
       return AppView.Recordings
   }

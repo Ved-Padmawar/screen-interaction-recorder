@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckSquare, Download, Edit3, FileVideo, Settings, Trash2 } from 'lucide-react'
+import { Check, CheckSquare, Download, Edit3, FileVideo, Settings, Trash2 } from 'lucide-react'
 import { DEFAULT_CAPTURE_SETTINGS, RuntimeAction, type CaptureSettings, type Recording } from '../domain/contracts'
 import {
-  extensionUrl,
   getCaptureSettings,
   getRecordingSlides,
   getRecordings,
+  navigateToExtensionPage,
   saveCaptureSettings,
   sendRuntimeMessage,
 } from '../platform/chrome'
 import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
 import { ThemeToggle } from '../ui/ThemeToggle'
+import { Thumbnail } from '../ui/Thumbnail'
 import { cn } from '../ui/cn'
 
 type Dialog = 'settings' | 'delete' | null
@@ -38,7 +39,10 @@ export function RecordingsPage() {
   const selectedCount = selected.size
   const allSelected = selectedCount > 0 && selectedCount === recordings.length
 
-  const selectedLabel = useMemo(() => `${selectedCount} selected`, [selectedCount])
+  const selectedLabel = useMemo(
+    () => `${selectedCount} ${selectedCount === 1 ? 'recording' : 'recordings'} selected`,
+    [selectedCount],
+  )
 
   function toggleSelection(filename: string) {
     setSelected((current) => {
@@ -47,6 +51,10 @@ export function RecordingsPage() {
       else next.add(filename)
       return next
     })
+  }
+
+  function openRecording(filename: string) {
+    navigateToExtensionPage(`viewer.html?recording=${filename}`)
   }
 
   function openDelete(filenames: string[]) {
@@ -93,86 +101,109 @@ export function RecordingsPage() {
   }
 
   return (
-    <main className="app-page py-5">
-      <div className="page-shell">
-        <header className="mb-5 flex flex-wrap items-center gap-3">
-          <div>
+    <div className="app-page">
+      <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-md">
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+          <div className="min-w-0 flex-1">
             <h1 className="text-title">Recordings</h1>
-            <p className="text-body">Review captures, edit tooltips, and export the HTML walkthrough.</p>
+            <p className="hidden text-body sm:block">
+              Review captures, edit tooltips, and export the HTML walkthrough.
+            </p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button
-              icon={<CheckSquare size={16} />}
-              onClick={() => {
-                setSelectMode((value) => !value)
-                setSelected(new Set())
-              }}
-            >
-              {selectMode ? 'Cancel' : 'Select'}
-            </Button>
+            {recordings.length > 0 ? (
+              <Button
+                icon={<CheckSquare size={16} />}
+                onClick={() => {
+                  setSelectMode((value) => !value)
+                  setSelected(new Set())
+                }}
+              >
+                {selectMode ? 'Cancel' : 'Select'}
+              </Button>
+            ) : null}
             <Button icon={<Settings size={16} />} onClick={() => setDialog('settings')}>
-              Settings
+              <span className="hidden sm:inline">Settings</span>
             </Button>
           </div>
-        </header>
+        </div>
+      </header>
 
+      <main className={cn('px-4 py-5 sm:px-6', selectMode && selectedCount > 0 && 'pb-24')}>
         {status ? (
-          <div className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink-muted">{status}</div>
+          <div className="mb-4 flex items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink-muted">
+            <span className="flex-1">{status}</span>
+            <Button aria-label="Dismiss" onClick={() => setStatus(null)} size="sm" variant="ghost">
+              Dismiss
+            </Button>
+          </div>
         ) : null}
 
-        {loading ? <div className="surface p-8 text-center text-body">Loading recordings...</div> : null}
+        {loading ? <p className="py-20 text-center text-body">Loading recordings...</p> : null}
 
         {!loading && recordings.length === 0 ? (
-          <div className="surface p-8 text-center">
+          <div className="mx-auto max-w-sm py-20 text-center">
             <FileVideo className="mx-auto mb-3 text-ink-soft" size={28} />
             <h2 className="text-section">No recordings yet</h2>
             <p className="text-body">Click the extension icon to capture your first flow.</p>
           </div>
         ) : null}
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-4">
           {recordings.map((recording) => {
             const isSelected = selected.has(recording.filename)
+            const slideCount = recording.slideCount ?? recording.data.length
+
             return (
               <article
                 className={cn(
-                  'surface overflow-hidden transition hover:-translate-y-0.5 hover:border-brand/50',
-                  selectMode && 'cursor-pointer',
-                  isSelected && 'border-brand ring-2 ring-brand/20',
+                  'group surface flex flex-col overflow-hidden text-left transition',
+                  'hover:border-ink-soft/40 hover:shadow-raised',
+                  isSelected && 'border-brand ring-2 ring-brand/25',
                 )}
                 key={recording.filename}
-                onClick={() => {
-                  if (selectMode) toggleSelection(recording.filename)
-                  else window.location.href = extensionUrl(`viewer.html?recording=${recording.filename}`)
-                }}
               >
-                <div className="relative flex aspect-video items-center justify-center bg-surface-muted text-caption">
-                  <FileVideo size={24} />
-                  <span className="ml-2">Click to view</span>
-                  <span className="absolute bottom-2 right-2 rounded bg-ink px-2 py-1 text-xs font-semibold text-white">
-                    {recording.slideCount ?? recording.data.length} slides
+                <button
+                  aria-label={selectMode ? `Select ${recording.title}` : `View ${recording.title}`}
+                  className="focus-ring relative block aspect-video w-full overflow-hidden bg-surface-muted"
+                  onClick={() =>
+                    selectMode ? toggleSelection(recording.filename) : openRecording(recording.filename)
+                  }
+                  type="button"
+                >
+                  <Thumbnail recording={recording} />
+
+                  <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                    {slideCount} {slideCount === 1 ? 'slide' : 'slides'}
                   </span>
+
                   {selectMode ? (
                     <span
                       className={cn(
-                        'absolute left-2 top-2 flex size-6 items-center justify-center rounded border bg-surface',
-                        isSelected ? 'border-brand bg-brand text-white' : 'border-line',
+                        'absolute left-2 top-2 flex size-6 items-center justify-center rounded-md border transition',
+                        isSelected
+                          ? 'border-brand bg-brand text-white'
+                          : 'border-white/70 bg-black/40 text-transparent backdrop-blur-sm',
                       )}
                     >
-                      {isSelected ? <CheckSquare size={14} /> : null}
+                      <Check size={14} strokeWidth={3} />
                     </span>
                   ) : null}
-                </div>
-                <div className="space-y-3 p-4">
-                  <div>
-                    <h2 className="line-clamp-2 text-section">{recording.title || 'Untitled Recording'}</h2>
-                    <p className="text-caption">{formatDate(recording.date)}</p>
+                </button>
+
+                <div className="flex flex-1 flex-col gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="line-clamp-2 text-sm font-semibold leading-5 text-ink">
+                      {recording.title || 'Untitled Recording'}
+                    </h2>
+                    <p className="mt-0.5 text-caption">{formatDate(recording.date)}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2" onClick={(event) => event.stopPropagation()}>
+
+                  <div className="flex items-center gap-2">
                     <Button
                       icon={<Edit3 size={14} />}
-                      onClick={() => (window.location.href = extensionUrl(`tooltip-editor.html?recording=${recording.filename}`))}
+                      onClick={() => navigateToExtensionPage(`tooltip-editor.html?recording=${recording.filename}`)}
                       size="sm"
                     >
                       Tooltips
@@ -181,11 +212,12 @@ export function RecordingsPage() {
                       HTML
                     </Button>
                     <Button
-                      aria-label="Delete recording"
+                      aria-label={`Delete ${recording.title}`}
+                      className="ml-auto"
                       icon={<Trash2 size={14} />}
                       onClick={() => openDelete([recording.filename])}
-                      size="sm"
-                      variant="ghost"
+                      size="icon-sm"
+                      variant="danger-ghost"
                     />
                   </div>
                 </div>
@@ -193,12 +225,12 @@ export function RecordingsPage() {
             )
           })}
         </section>
-      </div>
+      </main>
 
       {selectMode && selectedCount > 0 ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface px-4 py-3 shadow-panel">
-          <div className="mx-auto flex max-w-5xl items-center gap-2">
-            <span className="text-sm font-semibold text-ink">{selectedLabel}</span>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur-md sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-ink">{selectedLabel}</span>
             <Button
               className="ml-auto"
               onClick={() => setSelected(allSelected ? new Set() : new Set(recordings.map((item) => item.filename)))}
@@ -206,7 +238,12 @@ export function RecordingsPage() {
             >
               {allSelected ? 'Clear' : 'Select all'}
             </Button>
-            <Button icon={<Trash2 size={14} />} onClick={() => openDelete(Array.from(selected))} size="sm" variant="danger">
+            <Button
+              icon={<Trash2 size={14} />}
+              onClick={() => openDelete(Array.from(selected))}
+              size="sm"
+              variant="danger"
+            >
               Delete
             </Button>
           </div>
@@ -226,18 +263,19 @@ export function RecordingsPage() {
           onClose={() => setDialog(null)}
           title="Settings"
         >
-          <label className="space-y-1.5">
+          <label className="flex flex-col gap-1.5">
             <span className="field-label">Capture shortcut</span>
             <input
-              className="focus-ring h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
+              className="field-input"
               onChange={(event) => setSettings((value) => ({ ...value, CAPTURE_SHORTCUT: event.target.value }))}
               value={settings.CAPTURE_SHORTCUT}
             />
+            <span className="text-caption">Pressed on the page to capture a slide, e.g. shift+c</span>
           </label>
           <label className="flex items-start gap-3 text-sm text-ink-muted">
             <input
               checked={settings.SHOW_RECORDING_INDICATOR}
-              className="mt-1 accent-brand"
+              className="mt-0.5 size-4 accent-brand"
               onChange={(event) =>
                 setSettings((value) => ({ ...value, SHOW_RECORDING_INDICATOR: event.target.checked }))
               }
@@ -259,7 +297,7 @@ export function RecordingsPage() {
             </>
           }
           onClose={() => setDialog(null)}
-          title="Delete recording?"
+          title={pendingDelete.length === 1 ? 'Delete recording?' : 'Delete recordings?'}
         >
           <p className="text-body">
             {pendingDelete.length === 1
@@ -268,7 +306,7 @@ export function RecordingsPage() {
           </p>
         </Modal>
       ) : null}
-    </main>
+    </div>
   )
 }
 

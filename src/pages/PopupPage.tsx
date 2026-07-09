@@ -42,41 +42,41 @@ export function PopupPage() {
   }
 
   return (
-    <main className="w-[340px] bg-canvas p-4">
-      <section className="surface space-y-4 p-4 shadow-none">
-        <header className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-md bg-brand-soft text-brand">
-            <CircleDot size={20} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-base font-semibold leading-5 text-ink">Screen Recorder</h1>
-            <p className="text-caption">Capture click-by-click flows</p>
-          </div>
-          <ThemeToggle />
-        </header>
+    <main className="flex w-[336px] flex-col gap-4 bg-canvas p-4">
+      <header className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
+          <CircleDot size={18} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-sm font-semibold leading-5 text-ink">Screen Recorder</h1>
+          <p className="text-caption">Capture click-by-click flows</p>
+        </div>
+        <ThemeToggle />
+      </header>
 
-        {isRecording ? (
-          <div className="flex items-center gap-2 rounded-md bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
-            <span className="size-2 rounded-full bg-danger" />
-            Recording in progress
-          </div>
-        ) : null}
-
-        <label className="space-y-1.5">
+      {isRecording ? (
+        <p className="flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
+          <span className="size-2 shrink-0 animate-pulse rounded-full bg-danger" />
+          Recording in progress
+        </p>
+      ) : (
+        <label className="flex flex-col gap-1.5">
           <span className="field-label">Recording title</span>
           <input
-            className="focus-ring h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-soft disabled:bg-surface-muted"
-            disabled={isRecording}
+            className="field-input"
             onChange={(event) => setTitle(event.target.value)}
             placeholder={defaultTitle}
             value={title}
           />
         </label>
+      )}
 
-        {error ? <p className="rounded-md bg-danger-soft px-3 py-2 text-xs font-medium text-danger">{error}</p> : null}
+      {error ? (
+        <p className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger">{error}</p>
+      ) : null}
 
+      <div className="flex flex-col gap-2">
         <Button
-          className="mt-2 w-full"
           icon={isRecording ? <Square size={16} /> : <Play size={16} />}
           onClick={toggleRecording}
           variant={isRecording ? 'danger' : 'primary'}
@@ -84,10 +84,10 @@ export function PopupPage() {
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </Button>
 
-        <Button className="w-full border border-line" icon={<Library size={16} />} onClick={openRecordingsFromPopup}>
+        <Button icon={<Library size={16} />} onClick={openRecordingsFromPopup}>
           View Saved Recordings
         </Button>
-      </section>
+      </div>
     </main>
   )
 }

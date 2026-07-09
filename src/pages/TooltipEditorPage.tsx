@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { RuntimeAction, type Recording, type RecordingSlide } from '../domain/contracts'
-import { extensionUrl, getRecordingSlides, getRecordings, sendRuntimeMessage } from '../platform/chrome'
+import { getRecordingSlides, getRecordings, navigateToExtensionPage, sendRuntimeMessage } from '../platform/chrome'
 import { getSlideDotPosition } from '../lib/slidePosition'
 import { Button } from '../ui/Button'
 import { ThemeToggle } from '../ui/ThemeToggle'
@@ -25,6 +25,7 @@ export function TooltipEditorPage() {
       .then(([items, loadedSlides]) => {
         const match = items.find((item) => item.filename === recordingFilename)
         if (!match) throw new Error('Recording not found.')
+        if (loadedSlides.length === 0) throw new Error('No slides found for this recording.')
         setRecording(match)
         setSlides(loadedSlides)
       })
@@ -32,118 +33,140 @@ export function TooltipEditorPage() {
       .finally(() => setLoading(false))
   }, [recordingFilename])
 
-  function updateDot() {
+  const updateDot = useCallback(() => {
     const image = imageRef.current
     if (!image || !currentSlide) return
     setDot(getSlideDotPosition(currentSlide, image.clientWidth, image.clientHeight))
-  }
+  }, [currentSlide])
+
+  useLayoutEffect(() => {
+    const image = imageRef.current
+    if (!image) return
+
+    updateDot()
+    const observer = new ResizeObserver(updateDot)
+    observer.observe(image)
+    return () => observer.disconnect()
+  }, [updateDot])
 
   function updateTooltip(value: string) {
-    setSlides((items) => items.map((slide, slideIndex) => (slideIndex === index ? { ...slide, tooltipText: value } : slide)))
+    setSlides((items) =>
+      items.map((slide, slideIndex) => (slideIndex === index ? { ...slide, tooltipText: value } : slide)),
+    )
   }
 
   async function save() {
     if (!recording) return
 
+    // Slides carry the index of the interaction they came from; interactions
+    // without a usable screenshot have no slide, so match on index rather than
+    // assuming the two lists line up positionally.
+    const tooltipsByInteraction = new Map(slides.map((slide) => [slide.index, slide.tooltipText]))
+
     const updatedRecording: Recording = {
       ...recording,
-      data: recording.data.map((interaction, interactionIndex) => ({
-        ...interaction,
-        tooltipText: slides[interactionIndex]?.tooltipText ?? null,
-      })),
+      data: recording.data.map((interaction, interactionIndex) =>
+        tooltipsByInteraction.has(interactionIndex)
+          ? { ...interaction, tooltipText: tooltipsByInteraction.get(interactionIndex) ?? null }
+          : interaction,
+      ),
     }
 
     const response = await sendRuntimeMessage({ action: RuntimeAction.UpdateRecording, updatedRecording })
-    setStatus(response.success ? 'Changes saved.' : response.error ?? 'Failed to save changes.')
+    setStatus(response.success ? 'Changes saved.' : (response.error ?? 'Failed to save changes.'))
     if (response.success) setRecording(updatedRecording)
   }
 
   if (loading || !currentSlide) {
     return (
-      <main className="app-page flex min-h-screen items-center justify-center p-6">
-        <div className="surface max-w-md p-6 text-center text-body">{status ?? 'Loading tooltip editor...'}</div>
+      <main className="app-page flex min-h-dvh items-center justify-center p-6">
+        <p className="surface max-w-md p-6 text-center text-body">{status ?? 'Loading tooltip editor...'}</p>
       </main>
     )
   }
 
   return (
-    <main className="app-page min-h-screen py-5">
-      <div className="page-shell">
-        <header className="mb-5 flex flex-wrap items-center gap-3">
-          <Button icon={<ArrowLeft size={16} />} onClick={() => (window.location.href = extensionUrl('recordings.html'))}>
-            Recordings
-          </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-title">Tooltip Editor</h1>
-            <p className="text-body">{recording?.title}</p>
-          </div>
-          <ThemeToggle />
-          <Button icon={<Save size={16} />} onClick={() => void save()} variant="primary">
-            Save Changes
-          </Button>
-        </header>
+    <div className="app-viewport grid grid-rows-[auto_minmax(0,1fr)]">
+      <header className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2.5 sm:px-4">
+        <Button
+          aria-label="Back to recordings"
+          icon={<ArrowLeft size={16} />}
+          onClick={() => navigateToExtensionPage('recordings.html')}
+        >
+          <span className="hidden sm:inline">Recordings</span>
+        </Button>
 
-        {status ? <div className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink-muted">{status}</div> : null}
+        <div className="min-w-0 flex-1 px-1">
+          <h1 className="truncate text-sm font-semibold text-ink">Tooltip Editor</h1>
+          <p className="truncate text-caption">{recording?.title}</p>
+        </div>
 
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="surface flex min-h-[420px] items-center justify-center overflow-auto bg-[#10141f] p-4">
-            <div className="relative max-w-full">
-              <img
-                alt={`Slide ${index + 1}`}
-                className="block max-h-[calc(100vh-190px)] max-w-full rounded-md object-contain"
-                onLoad={updateDot}
-                ref={imageRef}
-                src={currentSlide.image}
-              />
+        <ThemeToggle />
+        <Button icon={<Save size={16} />} onClick={() => void save()} variant="primary">
+          <span className="hidden sm:inline">Save Changes</span>
+        </Button>
+      </header>
+
+      <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-1">
+        <main className="flex min-h-0 items-center justify-center overflow-hidden bg-stage p-3 sm:p-6">
+          <div className="relative max-h-full max-w-full leading-none">
+            <img
+              alt={`Slide ${index + 1}`}
+              className="block max-h-full max-w-full rounded-lg object-contain shadow-raised"
+              onLoad={updateDot}
+              ref={imageRef}
+              src={currentSlide.image}
+            />
+            <span
+              className="absolute size-3 rounded-full bg-brand ring-4 ring-brand/30"
+              style={{ left: dot.x, top: dot.y, transform: 'translate(-50%, -50%)' }}
+            />
+            {currentSlide.tooltipText ? (
               <span
-                className="absolute size-3 rounded-full bg-brand ring-4 ring-brand/30"
-                style={{ left: dot.x, top: dot.y, transform: 'translate(-50%, -50%)' }}
-              />
-              {currentSlide.tooltipText ? (
-                <span
-                  className="absolute max-w-72 rounded-md bg-[#182033] px-3 py-2 text-xs font-medium leading-5 text-white shadow-xl"
-                  style={{ left: dot.x + 18, top: dot.y - 10 }}
-                >
-                  {currentSlide.tooltipText}
-                </span>
-              ) : null}
-            </div>
+                className="tooltip-chip absolute"
+                style={{ left: dot.x + 18, top: dot.y - 10 }}
+              >
+                {currentSlide.tooltipText}
+              </span>
+            ) : null}
+          </div>
+        </main>
+
+        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-line bg-surface p-4 lg:border-l lg:border-t-0">
+          <div className="flex items-baseline justify-between">
+            <p className="field-label">Slide</p>
+            <p className="text-sm font-semibold tabular-nums text-ink">
+              {index + 1} <span className="font-normal text-ink-soft">of {slides.length}</span>
+            </p>
           </div>
 
-          <aside className="surface flex flex-col gap-4 p-4">
-            <div>
-              <p className="field-label">Slide</p>
-              <h2 className="text-section">
-                {index + 1} of {slides.length}
-              </h2>
-            </div>
+          <label className="flex min-h-0 flex-1 flex-col gap-1.5">
+            <span className="field-label">Tooltip text</span>
+            <textarea
+              className="field-input min-h-32 flex-1 resize-none leading-6"
+              onChange={(event) => updateTooltip(event.target.value)}
+              placeholder="Describe this click..."
+              value={currentSlide.tooltipText ?? ''}
+            />
+          </label>
 
-            <label className="flex min-h-0 flex-1 flex-col gap-2">
-              <span className="field-label">Tooltip text</span>
-              <textarea
-                className="focus-ring min-h-40 resize-y rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink"
-                onChange={(event) => updateTooltip(event.target.value)}
-                placeholder="Describe this click..."
-                value={currentSlide.tooltipText ?? ''}
-              />
-            </label>
+          {status ? <p className="text-caption">{status}</p> : null}
 
-            <div className="flex items-center gap-2">
-              <Button disabled={index === 0} icon={<ChevronLeft size={16} />} onClick={() => setIndex(index - 1)}>
-                Previous
-              </Button>
-              <Button
-                className="ml-auto"
-                disabled={index === slides.length - 1}
-                icon={<ChevronRight size={16} />}
-                onClick={() => setIndex(index + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </aside>
-        </section>
+          <div className="flex items-center gap-2">
+            <Button disabled={index === 0} icon={<ChevronLeft size={16} />} onClick={() => setIndex(index - 1)}>
+              Previous
+            </Button>
+            <Button
+              className="ml-auto"
+              disabled={index === slides.length - 1}
+              icon={<ChevronRight size={16} />}
+              onClick={() => setIndex(index + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </aside>
       </div>
-    </main>
+    </div>
   )
 }
