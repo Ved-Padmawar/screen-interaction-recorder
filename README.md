@@ -1,88 +1,33 @@
 # Screen Interaction Recorder
 
-> A Chrome extension for capturing step-by-step web interactions and turning them into visual guides.
+Chrome extension for capturing user interaction flows and exporting them as guided HTML walkthroughs.
 
-![Screen Interaction Recorder](icons/icon128.png)
+## Stack
 
----
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- Dexie / IndexedDB for screenshot blob storage
+- Lucide React icons
+- Chrome Extension Manifest V3
 
-## What it does
+## Development
 
-Screen Interaction Recorder lets you walk through any web flow while capturing screenshots at each step. Each capture saves the cursor position, a screenshot, and an optional tooltip explanation. The result is a navigable slideshow you can review, edit, and export.
+```powershell
+pnpm install
+pnpm run lint
+pnpm run build
+```
 
----
+The extension build is emitted to `dist/`. Load `dist/` as an unpacked extension in Chrome or Edge.
 
-## Features
+## Storage Model
 
-| | |
-|---|---|
-| **Shortcut capture** | Press a configurable shortcut (default: `Shift+C`) to capture the current cursor position |
-| **Auto screenshots** | A full screenshot is taken at each captured step |
-| **Tooltip editor** | Edit explanations for any step after recording |
-| **HTML export** | Export recordings as standalone interactive HTML slideshows |
-| **Bulk manage** | Multi-select and delete recordings in one action |
-| **Local only** | All data stays in your browser — nothing is sent externally |
+Small settings stay in `chrome.storage.sync`.
 
----
+Recording metadata stays lightweight. Screenshot images are optimized in the content script, converted to blobs, and stored in IndexedDB. Recording slide records keep `screenshotId` references instead of embedding large base64 strings.
 
-## Installation
+## Export
 
-### Developer Mode (manual)
-
-1. Clone or download this repository
-2. Go to `chrome://extensions/` in Chrome
-3. Enable **Developer mode** (top right toggle)
-4. Click **Load unpacked** and select the extension folder
-5. The extension icon will appear in your toolbar
-
----
-
-## Quick Start
-
-1. Click the extension icon
-2. Enter a title and click **Start Recording**
-3. Navigate to the page you want to document
-4. Press `Shift+C` wherever you want to capture a step — a tooltip prompt will appear
-5. Enter an explanation and press **Save** (or `Ctrl+Enter`)
-6. When done, click the extension icon and press **Stop Recording**
-7. Your recording appears in the Recordings page
-
----
-
-## Keyboard Shortcut
-
-The default shortcut is `Shift+C`. You can change it in **Settings** (gear icon on the Recordings page).
-
-Supported formats: `shift+key`, `ctrl+key`, `alt+key`
-
----
-
-## Exporting
-
-From the Recordings page, each card has an **Export HTML** button that generates a self-contained interactive slideshow file and downloads it.
-
----
-
-## Permissions
-
-| Permission | Why |
-|---|---|
-| `activeTab` | Access the current tab during recording |
-| `scripting` | Inject the capture script into pages |
-| `storage` | Save recordings locally |
-| `downloads` | Download exported files |
-| `tabs` | Track navigation between pages during a recording |
-
----
-
-## Privacy
-
-- No data leaves your browser
-- Recordings are stored in `chrome.storage.local`
-- The extension only activates on pages you choose to record
-
----
-
-## License
-
-[MIT](LICENSE)
+The app exports standalone HTML walkthroughs. PowerPoint/PPTX generation has been removed.
